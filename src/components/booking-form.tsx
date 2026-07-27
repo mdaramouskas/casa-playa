@@ -10,6 +10,8 @@ import { formatPrice } from "@/lib/money";
 // Prices shown here are informational; the API recomputes them server-side.
 
 const MONTHS_AHEAD = 12;
+/** Booking lead time in days — 1 = from tomorrow on, today is not bookable. */
+const MIN_DAYS_AHEAD = 1;
 
 function monthGrid(month: dayjs.Dayjs) {
   const first = month.startOf("month");
@@ -35,8 +37,12 @@ export function BookingForm({
   const common = useTranslations("common");
   const policy = useTranslations("policy");
 
-  const today = useMemo(() => dayjs().startOf("day"), []);
-  const [month, setMonth] = useState(today.startOf("month"));
+  // No same-day bookings: the earliest bookable day is tomorrow.
+  const firstBookable = useMemo(
+    () => dayjs().startOf("day").add(MIN_DAYS_AHEAD, "day"),
+    [],
+  );
+  const [month, setMonth] = useState(firstBookable.startOf("month"));
   const [date, setDate] = useState<string | null>(null);
   const [variantName, setVariantName] = useState(
     product.variants[0]?.name ?? "",
@@ -46,7 +52,7 @@ export function BookingForm({
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const maxMonth = today.add(MONTHS_AHEAD, "month").startOf("month");
+  const maxMonth = firstBookable.add(MONTHS_AHEAD, "month").startOf("month");
   const days = monthGrid(month);
   const weekdays =
     locale === "en"
@@ -116,7 +122,7 @@ export function BookingForm({
             <button
               type="button"
               onClick={() => setMonth(month.subtract(1, "month"))}
-              disabled={month.isSame(today, "month")}
+              disabled={month.isSame(firstBookable, "month")}
               className="px-2 text-lg text-neutral-500 disabled:opacity-30"
               aria-label="←"
             >
@@ -147,7 +153,7 @@ export function BookingForm({
             {days.map((day, i) => {
               if (!day) return <span key={`x${i}`} />;
               const value = day.format("YYYY-MM-DD");
-              const past = day.isBefore(today);
+              const past = day.isBefore(firstBookable);
               const selected = value === date;
               return (
                 <button

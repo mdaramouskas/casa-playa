@@ -11,6 +11,8 @@ import { getPaycenterConfig } from "@/lib/paycenter/config";
 // The price is always recomputed here — never trusted from the client.
 
 const MAX_DAYS_AHEAD = 365;
+/** Booking lead time: 1 = from tomorrow on, no same-day bookings. */
+const MIN_DAYS_AHEAD = 1;
 
 const bodySchema = z.object({
   productSlug: z.string().min(1),
@@ -53,9 +55,9 @@ export async function POST(request: Request) {
 
   // ── Date ────────────────────────────────────────────────────────────
   // Compared as plain YYYY-MM-DD strings so no timezone can shift the day.
-  const today = dayjs().format("YYYY-MM-DD");
+  const firstDay = dayjs().add(MIN_DAYS_AHEAD, "day").format("YYYY-MM-DD");
   const lastDay = dayjs().add(MAX_DAYS_AHEAD, "day").format("YYYY-MM-DD");
-  if (input.date < today || input.date > lastDay) return fail("invalid_date");
+  if (input.date < firstDay || input.date > lastDay) return fail("invalid_date");
   // A DATE column: store UTC midnight so the stored day is exactly input.date.
   const bookingDate = new Date(`${input.date}T00:00:00.000Z`);
   if (Number.isNaN(bookingDate.getTime())) return fail("invalid_date");
