@@ -32,6 +32,30 @@ based on the existing Travelotopos booking engine, not reusing its code.
 - **Out of scope**: NO fiscal documents (receipts/invoices) — the store handles
   invoicing on its own independent POS/accounting system.
 
+## Catalog (transcribed from the legacy site)
+
+Source of truth: **`src/data/catalog.ts`** → seeded into Postgres with
+`npm run db:seed` (idempotent upsert; re-run after every edit).
+
+| Product | Price (incl. VAT) | Groups | Slots |
+| --- | --- | --- | --- |
+| Book a Cabana Beach Bed 1st Row | 70.00€ | Cabana Beach Bed | 09:00–12:00 / 30′ (7) |
+| Book a Seaside Sun Bed 1st Row | 50.00€ | Seaside Sun Bed | 09:00–12:00 / 30′ (7) |
+| Book a Seaside Sun Bed 2nd Row | 35.00€ | Seaside Sun Bed | 09:00–12:00 / 30′ (7) |
+| Book a Seaside Sun Bed 3rd Row | 35.00€ | Seaside Sun Bed | 09:00–12:00 / 30′ (7) |
+| Book a table Private Restaurant Area | — (no price shown) | Seafood Menu, Meat Menu | 11:00–18:00 / 30′ (15 each) |
+
+- Inclusions: cabana & 1st-row sunbed → Wi-Fi, personal towel, changing room &
+  shower; 2nd/3rd row → Wi-Fi, changing room & shower.
+- Beds are **all-day** bookings — the slot is only an arrival time
+  (`Product.slotKind = ARRIVAL`). Restaurant slots are real reservation times
+  (`RESERVATION`).
+- A `ProductVariant` is the collapsible orange header above a slot grid; every
+  product has at least one, the restaurant has two (menus).
+- **Still missing**: daily capacity per product / persons per restaurant slot
+  (`dailyCapacity` / `TimeSlot.capacity` are `null` = no limit enforced),
+  product photos, and whether the restaurant table is prepaid.
+
 ## Payment integration notes
 
 - This is **Paycenter Redirection**, NOT the `epayworldwide.com` gift-card portal.
@@ -46,8 +70,8 @@ based on the existing Travelotopos booking engine, not reusing its code.
 
 ## Open questions (need client input)
 
-See the shared list — exact item catalog + prices + daily availability, restaurant
-time-slot ranges & per-slot capacity, business identity (ΑΦΜ/name/address),
+Catalog, prices and slot ranges are now known (see above). Still open: daily
+availability per product & per-slot capacity, business identity (ΑΦΜ/name/address),
 exact cancellation-policy wording, coupon usage at launch, domain/hosting,
 Paycenter credentials + bank technical contact.
 
@@ -56,5 +80,6 @@ Paycenter credentials + bank technical contact.
 ```bash
 cp .env.example .env       # fill DATABASE_URL etc.
 npm run db:push            # create schema in the database
+npm run db:seed            # load the catalog from src/data/catalog.ts
 npm run dev
 ```

@@ -19,10 +19,16 @@
     "heroTitle": "Casa Playa",
     "heroSubtitle": "Beach bar & εστιατόριο, Ζάκυνθος",
     "heroLead": "Κλείστε online ξαπλώστρες, cabanas και τραπέζι στο εστιατόριο — άμεσα και με ασφάλεια.",
-    "chooseType": "Επιλέξτε τι θέλετε να κρατήσετε",
-    "loungersDesc": "Ξαπλώστρες ανά σετ, με θέα στη θάλασσα.",
-    "cabanasDesc": "Standard & VIP (1st row) cabanas.",
-    "restaurantDesc": "Τραπέζι εστιατορίου — Seafood ή Meat menu."
+    "chooseType": "Επιλέξτε τι θέλετε να κρατήσετε"
+  },
+  "catalog": {
+    "includedInPrice": "Περιλαμβάνονται στην τιμή:",
+    "vatNote": "Όλες οι τιμές περιλαμβάνουν ΦΠΑ 24% και τοπικούς φόρους.",
+    "more": "Περισσότερα",
+    "from": "Από:",
+    "availableTimes": "Διαθέσιμες ώρες",
+    "noPrepayment": "Χωρίς προπληρωμή",
+    "bookingSoon": "Η online κράτηση ενεργοποιείται σύντομα."
   },
   "booking": {
     "selectDate": "Επιλέξτε ημερομηνία",

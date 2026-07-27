@@ -22,6 +22,12 @@ enum PricingUnit {
   PER_PERSON
 }
 
+// What a TimeSlot means for a product.
+enum SlotKind {
+  ARRIVAL // beds: booking covers the whole day, the slot is only the arrival time
+  RESERVATION // restaurant: the slot is the actual reservation time
+}
+
 enum BookingStatus {
   PENDING // created, awaiting payment
   PAID // payment confirmed via verified HMAC callback
@@ -48,45 +54,79 @@ enum StaffRole {
 // ── Catalog ────────────────────────────────────────────────────────────
 
 model Product {
-  id            String       @id @default(cuid())
-  type          ProductType
-  subtype       String? // "Standard" | "VIP" | "Seafood" | "Meat"
-  slug          String       @unique
-  name          String // Greek (primary)
-  nameEn        String?
+  id      String      @id @default(cuid())
+  type    ProductType
+  subtype String? // "1st Row" | "2nd Row" | "3rd Row"
+  slug    String      @unique
+  // Listing/page title exactly as shown to the customer
+  // (e.g. "Book a Seaside Sun Bed 2nd Row").
+  title   String
+  titleEn String?
+  // Plain product name, used in carts/emails/admin ("Seaside Sun Bed 2nd Row").
+  name    String
+  nameEn  String?
+
   description   String?
   descriptionEn String?
-  priceCents    Int // VAT-inclusive unit price
-  currency      String       @default("EUR")
-  pricingUnit   PricingUnit
-  // Default units available per day: "sets" for loungers/cabanas, "seats"
-  // for tables (per-slot capacity lives on TimeSlot instead when timed).
-  dailyCapacity Int          @default(0)
-  minQty        Int          @default(1)
-  maxQty        Int?
-  requiresSlot  Boolean      @default(false) // true for restaurant tables
-  active        Boolean      @default(true)
-  sortOrder     Int          @default(0)
+  // "Περιλαμβάνονται στην τιμή" bullets.
+  includes      String[] @default([])
+  includesEn    String[] @default([])
+  // Extra note shown under the description
+  // (e.g. "Η κράτηση ισχύει για όλη την ημέρα").
+  note          String?
+  noteEn        String?
+  imageUrl      String?
 
-  timeSlots     TimeSlot[]
-  overrides     AvailabilityOverride[]
-  bookings      Booking[]
+  priceCents    Int // VAT-inclusive unit price (0 = no prepayment / price not shown)
+  currency      String      @default("EUR")
+  pricingUnit   PricingUnit
+  // Units available per day: "sets" for loungers/cabanas, "seats" for tables.
+  // null = not configured yet (no limit enforced).
+  dailyCapacity Int?
+  minQty        Int         @default(1)
+  maxQty        Int?
+  requiresSlot  Boolean     @default(false)
+  slotKind      SlotKind    @default(RESERVATION)
+  active        Boolean     @default(true)
+  sortOrder     Int         @default(0)
+
+  variants  ProductVariant[]
+  overrides AvailabilityOverride[]
+  bookings  Booking[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
 
-// Bookable half-hour slots for timed products (restaurant tables).
-model TimeSlot {
+// A bookable group inside a product page — rendered as the collapsible header
+// above the slot grid ("Cabana Beach Bed", "Seafood Menu", "Meat Menu").
+// Every product has at least one.
+model ProductVariant {
   id        String  @id @default(cuid())
   productId String
   product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
-  time      String // "13:00", "13:30" (24h, local time)
-  capacity  Int // seats available in this slot
+  name      String
+  nameEn    String?
   active    Boolean @default(true)
   sortOrder Int     @default(0)
 
-  @@unique([productId, time])
+  timeSlots TimeSlot[]
+  bookings  Booking[]
+
+  @@unique([productId, name])
+}
+
+// Bookable half-hour slots of a variant.
+model TimeSlot {
+  id        String         @id @default(cuid())
+  variantId String
+  variant   ProductVariant @relation(fields: [variantId], references: [id], onDelete: Cascade)
+  time      String // "13:00", "13:30" (24h, local time)
+  capacity  Int? // null = no per-slot limit, falls back to Product.dailyCapacity
+  active    Boolean        @default(true)
+  sortOrder Int            @default(0)
+
+  @@unique([variantId, time])
 }
 
 // Per-date capacity override (e.g. closed day = 0, or special count).
@@ -108,29 +148,33 @@ model Booking {
   productId String
   product   Product @relation(fields: [productId], references: [id])
 
-  bookingDate DateTime  @db.Date // date of use (X)
-  timeSlot    String? // "13:00" for timed table bookings
-  quantity    Int // sets or persons
+  variantId   String?
+  variant     ProductVariant? @relation(fields: [variantId], references: [id])
+  variantName String? // snapshot, e.g. "Seafood Menu"
+
+  bookingDate    DateTime @db.Date // date of use (X)
+  timeSlot       String? // "13:00" — arrival time (beds) or reservation time (tables)
+  quantity       Int // sets or persons
   unitPriceCents Int // snapshot, VAT-inclusive
   subtotalCents  Int // unit * qty before discount
-  discountCents  Int    @default(0)
+  discountCents  Int      @default(0)
   totalCents     Int // locked amount actually charged
-  currency       String @default("EUR")
+  currency       String   @default("EUR")
   couponCode     String?
 
   // Customer details
-  firstName String
-  lastName  String
-  email     String
-  phone     String
+  firstName    String
+  lastName     String
+  email        String
+  phone        String
   phoneCountry String? // dial code, e.g. "+30"
-  comments  String?
+  comments     String?
 
   cancellationAccepted Boolean @default(false)
 
-  status             BookingStatus @default(PENDING)
-  rescheduleCount    Int           @default(0)
-  originalBookingDate DateTime?    @db.Date // first date before any reschedule
+  status              BookingStatus @default(PENDING)
+  rescheduleCount     Int           @default(0)
+  originalBookingDate DateTime?     @db.Date // first date before any reschedule
 
   payment Payment?
 
@@ -156,7 +200,7 @@ model Payment {
   ticket        String? // Paycenter ticket from IssueNewTicket
   transactionId String? // bank transaction id (from callback)
   paymentRef    String? // bank reference / RRN
-  hmacVerified  Boolean @default(false)
+  hmacVerified  Boolean   @default(false)
   rawCallback   Json? // full verified callback payload for audit
   processedAt   DateTime? // set once a callback has been applied (idempotency)
 
@@ -169,14 +213,14 @@ model Payment {
 // ── Discounts ──────────────────────────────────────────────────────────
 
 model Coupon {
-  id            String    @id @default(cuid())
-  code          String    @unique
-  percentOff    Int? // 0-100
+  id             String    @id @default(cuid())
+  code           String    @unique
+  percentOff     Int? // 0-100
   amountOffCents Int? // fixed discount, VAT-inclusive
-  active        Boolean   @default(true)
+  active         Boolean   @default(true)
   maxRedemptions Int?
-  timesRedeemed Int       @default(0)
-  expiresAt     DateTime?
+  timesRedeemed  Int       @default(0)
+  expiresAt      DateTime?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

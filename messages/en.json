@@ -19,10 +19,16 @@
     "heroTitle": "Casa Playa",
     "heroSubtitle": "Beach bar & restaurant, Zakynthos",
     "heroLead": "Book sunbeds, cabanas and a restaurant table online — instantly and securely.",
-    "chooseType": "Choose what you'd like to book",
-    "loungersDesc": "Sunbeds per set, with sea views.",
-    "cabanasDesc": "Standard & VIP (1st row) cabanas.",
-    "restaurantDesc": "Restaurant table — Seafood or Meat menu."
+    "chooseType": "Choose what you'd like to book"
+  },
+  "catalog": {
+    "includedInPrice": "Included in the price:",
+    "vatNote": "All prices include 24% VAT and local taxes.",
+    "more": "More",
+    "from": "From:",
+    "availableTimes": "Available times",
+    "noPrepayment": "No prepayment",
+    "bookingSoon": "Online booking goes live soon."
   },
   "booking": {
     "selectDate": "Select a date",

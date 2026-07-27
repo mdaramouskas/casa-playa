@@ -1,5 +1,7 @@
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
+import { catalog, localizeProduct } from "@/data/catalog";
+import { formatPrice } from "@/lib/money";
 
 export default async function HomePage({
   params,
@@ -9,13 +11,12 @@ export default async function HomePage({
   const { locale } = await params;
   setRequestLocale(locale);
   const t = await getTranslations("home");
-  const nav = await getTranslations("nav");
+  const c = await getTranslations("catalog");
+  const common = await getTranslations("common");
 
-  const types = [
-    { href: "/loungers", label: nav("loungers"), desc: t("loungersDesc") },
-    { href: "/cabanas", label: nav("cabanas"), desc: t("cabanasDesc") },
-    { href: "/restaurant", label: nav("restaurant"), desc: t("restaurantDesc") },
-  ];
+  const products = [...catalog]
+    .sort((a, b) => a.sortOrder - b.sortOrder)
+    .map((product) => localizeProduct(product, locale));
 
   return (
     <main className="flex-1">
@@ -35,20 +36,53 @@ export default async function HomePage({
         <h2 className="mb-8 text-center text-xl font-semibold">
           {t("chooseType")}
         </h2>
-        <div className="grid gap-6 sm:grid-cols-3">
-          {types.map((tp) => (
-            <Link
-              key={tp.href}
-              href={tp.href}
-              className="group rounded-2xl border border-neutral-200 bg-white p-6 shadow-sm transition hover:border-sky-300 hover:shadow-md"
+
+        <ul className="divide-y divide-neutral-200 rounded-2xl border border-neutral-200 bg-white shadow-sm">
+          {products.map((product) => (
+            <li
+              key={product.slug}
+              className="flex flex-col gap-5 p-6 sm:flex-row sm:items-start"
             >
-              <h3 className="text-lg font-semibold group-hover:text-sky-700">
-                {tp.label}
-              </h3>
-              <p className="mt-2 text-sm text-neutral-600">{tp.desc}</p>
-            </Link>
+              <div className="h-32 w-full shrink-0 rounded-xl bg-neutral-100 sm:w-48" />
+
+              <div className="flex-1">
+                <h3 className="text-xl font-semibold text-sky-800">
+                  {product.title}
+                </h3>
+
+                {product.includes.length > 0 && (
+                  <>
+                    <p className="mt-3 font-medium underline underline-offset-4">
+                      {c("includedInPrice")}
+                    </p>
+                    <p className="mt-1 text-sm text-neutral-700">
+                      {product.includes.join(", ")}
+                    </p>
+                  </>
+                )}
+
+                <p className="mt-3 text-sm text-neutral-600">{c("vatNote")}</p>
+                {product.note && (
+                  <p className="mt-1 text-sm text-neutral-600">{product.note}</p>
+                )}
+              </div>
+
+              <div className="flex shrink-0 flex-col items-start gap-3 sm:items-end">
+                <p className="text-xl font-semibold text-amber-600">
+                  {product.priceCents > 0
+                    ? formatPrice(product.priceCents)
+                    : c("noPrepayment")}
+                </p>
+                <Link
+                  href={`/book/${product.slug}`}
+                  className="rounded-lg bg-amber-500 px-6 py-2 font-medium text-white transition hover:bg-amber-600"
+                >
+                  {common("book")}
+                </Link>
+              </div>
+            </li>
           ))}
-        </div>
+        </ul>
       </section>
     </main>
   );

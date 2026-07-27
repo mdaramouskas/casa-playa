@@ -18,6 +18,11 @@ export function formatMoney(cents: number, locale: string = "el-GR") {
   }).format(cents / 100);
 }
 
+/** Price as displayed on the site: `70.00€` (same format as the legacy engine). */
+export function formatPrice(cents: number) {
+  return `${(cents / 100).toFixed(2)}€`;
+}
+
 /** Apply a discount (percent and/or fixed cents) to a VAT-inclusive subtotal. */
 export function applyDiscount(
   subtotalCents: number,
