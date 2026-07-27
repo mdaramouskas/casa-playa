@@ -1,7 +1,9 @@
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
-import { catalog, localizeProduct } from "@/data/catalog";
+import { listProducts } from "@/lib/catalog";
 import { formatPrice } from "@/lib/money";
+
+export const dynamic = "force-dynamic";
 
 export default async function HomePage({
   params,
@@ -14,9 +16,7 @@ export default async function HomePage({
   const c = await getTranslations("catalog");
   const common = await getTranslations("common");
 
-  const products = [...catalog]
-    .sort((a, b) => a.sortOrder - b.sortOrder)
-    .map((product) => localizeProduct(product, locale));
+  const products = await listProducts(locale);
 
   return (
     <main className="flex-1">

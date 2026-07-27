@@ -12,7 +12,7 @@
     "db:push": "prisma db push",
     "db:migrate": "prisma migrate dev",
     "db:studio": "prisma studio",
-    "db:seed": "node --loader ts-node/esm prisma/seed.ts"
+    "db:seed": "node prisma/seed.mts"
   },
   "dependencies": {
     "@prisma/adapter-pg": "^7.9.0",

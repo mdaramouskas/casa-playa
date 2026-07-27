@@ -44,7 +44,27 @@
     "comments": "Comments",
     "acceptCancellation": "I accept the cancellation policy",
     "proceedToPayment": "Proceed to payment",
-    "reference": "Booking reference"
+    "reference": "Booking reference",
+    "selectDateAndTimeFirst": "Pick a date and a time first.",
+    "errors": {
+      "generic": "Something went wrong. Please try again.",
+      "soldOut": "No availability for the selected date.",
+      "invalidDate": "Invalid date.",
+      "invalidCoupon": "That discount code is not valid."
+    }
+  },
+  "mockPay": {
+    "banner": "TEST PAYMENT — this is not the bank's page and nothing is charged.",
+    "title": "Booking payment",
+    "mode": "Paycenter mode: {mode} · {type}",
+    "merchant": "Merchant",
+    "reference": "Booking reference",
+    "description": "Service",
+    "net": "Net amount",
+    "vat": "VAT 24%",
+    "payButton": "Successful payment",
+    "failButton": "Failure / Cancel",
+    "footnote": "Once the bank issues MerchantId, HashKey and endpoints, this page is replaced by Paycenter's pay.aspx — the rest of the flow (signed callback, HMAC verification) stays the same."
   },
   "policy": {
     "cancellationTitle": "Cancellation policy",

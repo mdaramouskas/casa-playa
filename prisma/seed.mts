@@ -2,11 +2,13 @@
 // Idempotent: re-run it after editing the catalog to push changes.
 //
 //   npm run db:seed
+//
+// Runs on Node's native TypeScript support (type stripping) — no ts-node.
 
 import "dotenv/config";
 import { PrismaClient } from "@prisma/client";
 import { PrismaPg } from "@prisma/adapter-pg";
-import { catalog } from "../src/data/catalog";
+import { catalog } from "../src/data/catalog.ts";
 
 const connectionString = process.env.DATABASE_URL;
 if (!connectionString) {

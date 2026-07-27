@@ -24,17 +24,23 @@ export interface PaycenterConfig {
   callbackUrl: string;
 }
 
-function baseUrl(): string {
-  return (
-    process.env.APP_BASE_URL ??
-    process.env.NEXT_PUBLIC_APP_BASE_URL ??
-    "http://localhost:3000"
-  ).replace(/\/$/, "");
+export function appBaseUrl(): string {
+  const configured =
+    process.env.APP_BASE_URL ?? process.env.NEXT_PUBLIC_APP_BASE_URL;
+  if (configured) return configured.replace(/\/$/, "");
+
+  // On Vercel, fall back to the deployment's own URL so redirects and the
+  // callback URL are correct even before a custom domain is configured.
+  const vercel =
+    process.env.VERCEL_PROJECT_PRODUCTION_URL ?? process.env.VERCEL_URL;
+  if (vercel) return `https://${vercel.replace(/\/$/, "")}`;
+
+  return "http://localhost:3000";
 }
 
 export function getPaycenterConfig(): PaycenterConfig {
   const mode = (process.env.PAYCENTER_MODE as PaycenterMode) ?? "mock";
-  const app = baseUrl();
+  const app = appBaseUrl();
   return {
     mode,
     merchantId: process.env.PAYCENTER_MERCHANT_ID ?? "",

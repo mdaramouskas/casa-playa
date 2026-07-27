@@ -56,6 +56,36 @@ Source of truth: **`src/data/catalog.ts`** → seeded into Postgres with
   (`dailyCapacity` / `TimeSlot.capacity` are `null` = no limit enforced),
   product photos, and whether the restaurant table is prepaid.
 
+## Database
+
+Supabase project **`casa-playa`** (`swtvotectgdgzhfksyto`, eu-central-1). The app
+connects through the **pooler in transaction mode (port 6543)** with a dedicated
+`casa_playa_app` role — not the project's `postgres` superuser. Every table has
+RLS enabled with no policies, so the public PostgREST API cannot read them; the
+app role has `BYPASSRLS` and reaches Postgres directly.
+
+Schema was applied from `prisma migrate diff` output; `npm run db:push` /
+`npm run db:seed` are the ongoing path (seed is idempotent).
+
+## Booking & payment flow
+
+1. `/[locale]/book/[slug]` — date, variant + time slot, quantity, customer
+   details, cancellation-policy checkbox (`src/components/booking-form.tsx`).
+2. `POST /api/bookings` — recomputes the price server-side (never trusts the
+   client), checks capacity/overrides, creates the booking as `PENDING`, asks
+   the gateway for a ticket and returns the redirect URL.
+3. Gateway. With `PAYCENTER_MODE=mock` the customer lands on
+   `/[locale]/pay/mock/[ticket]` — our own page, deliberately not styled like a
+   bank, taking no card details, with "successful payment" / "failure" buttons
+   that post the same HMAC-signed callback the real gateway would.
+4. `POST /api/payment/callback` — verifies HMAC-SHA256, checks the amount, then
+   flips `Payment` + `Booking` to PAID/FAILED inside one transaction and marks
+   `processedAt`. Replays are ignored; a bad signature returns 400.
+5. `/[locale]/payment/success|failure?ref=CAPL.…`.
+
+Products priced at 0 (the restaurant table, as on the legacy site) skip the
+gateway entirely and are confirmed on the spot — **needs client confirmation**.
+
 ## Payment integration notes
 
 - This is **Paycenter Redirection**, NOT the `epayworldwide.com` gift-card portal.
