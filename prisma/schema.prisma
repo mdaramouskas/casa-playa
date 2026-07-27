@@ -1,0 +1,207 @@
+// Casa Playa — booking system schema
+// All monetary values are stored in integer cents and are VAT-inclusive (24%).
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ── Enums ──────────────────────────────────────────────────────────────
+
+enum ProductType {
+  LOUNGER // ξαπλώστρα (per set)
+  CABANA // Standard / VIP (per set)
+  TABLE // restaurant table (per person, timed slots)
+}
+
+enum PricingUnit {
+  PER_SET
+  PER_PERSON
+}
+
+enum BookingStatus {
+  PENDING // created, awaiting payment
+  PAID // payment confirmed via verified HMAC callback
+  FAILED // payment failed/cancelled
+  CANCELLED // cancelled by staff (still non-refundable per policy)
+}
+
+enum PaymentStatus {
+  PENDING
+  PAID
+  FAILED
+}
+
+enum TransactionType {
+  SALE
+  PREAUTH
+}
+
+enum StaffRole {
+  ADMIN
+  STAFF
+}
+
+// ── Catalog ────────────────────────────────────────────────────────────
+
+model Product {
+  id            String       @id @default(cuid())
+  type          ProductType
+  subtype       String? // "Standard" | "VIP" | "Seafood" | "Meat"
+  slug          String       @unique
+  name          String // Greek (primary)
+  nameEn        String?
+  description   String?
+  descriptionEn String?
+  priceCents    Int // VAT-inclusive unit price
+  currency      String       @default("EUR")
+  pricingUnit   PricingUnit
+  // Default units available per day: "sets" for loungers/cabanas, "seats"
+  // for tables (per-slot capacity lives on TimeSlot instead when timed).
+  dailyCapacity Int          @default(0)
+  minQty        Int          @default(1)
+  maxQty        Int?
+  requiresSlot  Boolean      @default(false) // true for restaurant tables
+  active        Boolean      @default(true)
+  sortOrder     Int          @default(0)
+
+  timeSlots     TimeSlot[]
+  overrides     AvailabilityOverride[]
+  bookings      Booking[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// Bookable half-hour slots for timed products (restaurant tables).
+model TimeSlot {
+  id        String  @id @default(cuid())
+  productId String
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  time      String // "13:00", "13:30" (24h, local time)
+  capacity  Int // seats available in this slot
+  active    Boolean @default(true)
+  sortOrder Int     @default(0)
+
+  @@unique([productId, time])
+}
+
+// Per-date capacity override (e.g. closed day = 0, or special count).
+model AvailabilityOverride {
+  id        String   @id @default(cuid())
+  productId String
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  date      DateTime @db.Date
+  capacity  Int // total capacity for that date (0 = closed)
+
+  @@unique([productId, date])
+}
+
+// ── Bookings ───────────────────────────────────────────────────────────
+
+model Booking {
+  id        String  @id @default(cuid())
+  reference String  @unique // CAPL.XXXXXXXXXX
+  productId String
+  product   Product @relation(fields: [productId], references: [id])
+
+  bookingDate DateTime  @db.Date // date of use (X)
+  timeSlot    String? // "13:00" for timed table bookings
+  quantity    Int // sets or persons
+  unitPriceCents Int // snapshot, VAT-inclusive
+  subtotalCents  Int // unit * qty before discount
+  discountCents  Int    @default(0)
+  totalCents     Int // locked amount actually charged
+  currency       String @default("EUR")
+  couponCode     String?
+
+  // Customer details
+  firstName String
+  lastName  String
+  email     String
+  phone     String
+  phoneCountry String? // dial code, e.g. "+30"
+  comments  String?
+
+  cancellationAccepted Boolean @default(false)
+
+  status             BookingStatus @default(PENDING)
+  rescheduleCount    Int           @default(0)
+  originalBookingDate DateTime?    @db.Date // first date before any reschedule
+
+  payment Payment?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([bookingDate])
+  @@index([status])
+  @@index([email])
+}
+
+model Payment {
+  id        String  @id @default(cuid())
+  bookingId String  @unique
+  booking   Booking @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+
+  provider        String          @default("paycenter")
+  transactionType TransactionType @default(SALE)
+  amountCents     Int
+  currency        String          @default("EUR")
+  status          PaymentStatus   @default(PENDING)
+
+  ticket        String? // Paycenter ticket from IssueNewTicket
+  transactionId String? // bank transaction id (from callback)
+  paymentRef    String? // bank reference / RRN
+  hmacVerified  Boolean @default(false)
+  rawCallback   Json? // full verified callback payload for audit
+  processedAt   DateTime? // set once a callback has been applied (idempotency)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([transactionId])
+}
+
+// ── Discounts ──────────────────────────────────────────────────────────
+
+model Coupon {
+  id            String    @id @default(cuid())
+  code          String    @unique
+  percentOff    Int? // 0-100
+  amountOffCents Int? // fixed discount, VAT-inclusive
+  active        Boolean   @default(true)
+  maxRedemptions Int?
+  timesRedeemed Int       @default(0)
+  expiresAt     DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// ── Staff / admin ──────────────────────────────────────────────────────
+
+model StaffUser {
+  id           String    @id @default(cuid())
+  email        String    @unique
+  passwordHash String
+  name         String?
+  role         StaffRole @default(STAFF)
+  active       Boolean   @default(true)
+  lastLoginAt  DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// ── Business settings (identity, policy text, etc.) ────────────────────
+
+model Setting {
+  key   String @id
+  value String
+
+  updatedAt DateTime @updatedAt
+}

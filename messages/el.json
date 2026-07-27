@@ -1,0 +1,53 @@
+{
+  "common": {
+    "brand": "Casa Playa",
+    "book": "Κράτηση",
+    "loading": "Φόρτωση…",
+    "vatIncluded": "με ΦΠΑ 24%",
+    "perSet": "ανά σετ",
+    "perPerson": "ανά άτομο",
+    "total": "Σύνολο"
+  },
+  "nav": {
+    "home": "Αρχική",
+    "loungers": "Ξαπλώστρες",
+    "cabanas": "Cabanas",
+    "restaurant": "Εστιατόριο",
+    "myBooking": "Η κράτησή μου"
+  },
+  "home": {
+    "heroTitle": "Casa Playa",
+    "heroSubtitle": "Beach bar & εστιατόριο, Ζάκυνθος",
+    "heroLead": "Κλείστε online ξαπλώστρες, cabanas και τραπέζι στο εστιατόριο — άμεσα και με ασφάλεια.",
+    "chooseType": "Επιλέξτε τι θέλετε να κρατήσετε",
+    "loungersDesc": "Ξαπλώστρες ανά σετ, με θέα στη θάλασσα.",
+    "cabanasDesc": "Standard & VIP (1st row) cabanas.",
+    "restaurantDesc": "Τραπέζι εστιατορίου — Seafood ή Meat menu."
+  },
+  "booking": {
+    "selectDate": "Επιλέξτε ημερομηνία",
+    "quantity": "Ποσότητα",
+    "persons": "Άτομα",
+    "timeSlot": "Ώρα",
+    "couponCode": "Εκπτωτικός κωδικός",
+    "couponOptional": "προαιρετικό",
+    "firstName": "Όνομα",
+    "lastName": "Επώνυμο",
+    "email": "Email",
+    "phone": "Τηλέφωνο",
+    "comments": "Σχόλια",
+    "acceptCancellation": "Αποδέχομαι την πολιτική ακύρωσης",
+    "proceedToPayment": "Συνέχεια στην πληρωμή",
+    "reference": "Κωδικός κράτησης"
+  },
+  "policy": {
+    "cancellationTitle": "Πολιτική ακύρωσης",
+    "nonRefundable": "Μη επιστρέψιμη κράτηση. Σε περίπτωση ακύρωσης, μη εμφάνισης ή καθυστερημένης άφιξης (μετά τις 12:00) ισχύει 100% χρέωση."
+  },
+  "payment": {
+    "successTitle": "Η πληρωμή ολοκληρώθηκε",
+    "successBody": "Η κράτησή σας επιβεβαιώθηκε. Κωδικός κράτησης:",
+    "failureTitle": "Η πληρωμή δεν ολοκληρώθηκε",
+    "failureBody": "Κάτι πήγε στραβά με την πληρωμή. Δοκιμάστε ξανά."
+  }
+}

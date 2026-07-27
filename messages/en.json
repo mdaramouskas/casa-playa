@@ -1,0 +1,53 @@
+{
+  "common": {
+    "brand": "Casa Playa",
+    "book": "Book",
+    "loading": "Loading…",
+    "vatIncluded": "incl. 24% VAT",
+    "perSet": "per set",
+    "perPerson": "per person",
+    "total": "Total"
+  },
+  "nav": {
+    "home": "Home",
+    "loungers": "Sunbeds",
+    "cabanas": "Cabanas",
+    "restaurant": "Restaurant",
+    "myBooking": "My booking"
+  },
+  "home": {
+    "heroTitle": "Casa Playa",
+    "heroSubtitle": "Beach bar & restaurant, Zakynthos",
+    "heroLead": "Book sunbeds, cabanas and a restaurant table online — instantly and securely.",
+    "chooseType": "Choose what you'd like to book",
+    "loungersDesc": "Sunbeds per set, with sea views.",
+    "cabanasDesc": "Standard & VIP (1st row) cabanas.",
+    "restaurantDesc": "Restaurant table — Seafood or Meat menu."
+  },
+  "booking": {
+    "selectDate": "Select a date",
+    "quantity": "Quantity",
+    "persons": "Persons",
+    "timeSlot": "Time",
+    "couponCode": "Discount code",
+    "couponOptional": "optional",
+    "firstName": "First name",
+    "lastName": "Last name",
+    "email": "Email",
+    "phone": "Phone",
+    "comments": "Comments",
+    "acceptCancellation": "I accept the cancellation policy",
+    "proceedToPayment": "Proceed to payment",
+    "reference": "Booking reference"
+  },
+  "policy": {
+    "cancellationTitle": "Cancellation policy",
+    "nonRefundable": "Non-refundable booking. In case of cancellation, no-show or late arrival (after 12:00) a 100% charge applies."
+  },
+  "payment": {
+    "successTitle": "Payment completed",
+    "successBody": "Your booking is confirmed. Booking reference:",
+    "failureTitle": "Payment not completed",
+    "failureBody": "Something went wrong with the payment. Please try again."
+  }
+}
