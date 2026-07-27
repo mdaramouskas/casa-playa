@@ -25,6 +25,8 @@ based on the existing Travelotopos booking engine, not reusing its code.
 - **Reschedule** (`src/lib/reschedule.ts`): allowed until **X−2**; new date at most
   **X+2**; price locked to original amount (no charge/refund); UI disables after
   cutoff; reschedule is only a date update — no money movement.
+- **Lead time**: no same-day bookings — the earliest bookable date is tomorrow
+  (`MIN_DAYS_AHEAD`, enforced in both the calendar and `POST /api/bookings`).
 - **No-show / cancellation**: non-refundable; 100% charge on cancel/no-show/late
   arrival (after 12:00). System only records status; no auto resale logic.
 - **Payment states**: `PENDING → PAID` (only after verified HMAC-SHA256 callback)
