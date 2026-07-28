@@ -39,7 +39,7 @@ export interface PaycenterConfig {
   issueTicketUrl: string;
   /** Hosted payment page the customer's browser is POSTed to (§5). */
   payPageUrl: string;
-  /** Confirm against the WSDL at `${issueTicketUrl}?WSDL`. */
+  /** Confirmed against `${issueTicketUrl}?WSDL` on 2026-07-28; overridable. */
   soapMethod: string;
   soapNamespace: string;
 

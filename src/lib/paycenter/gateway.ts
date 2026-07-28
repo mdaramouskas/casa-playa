@@ -137,13 +137,59 @@ function buildTicketRequestFields(
   return fields;
 }
 
+// Element order and cardinality of the `TicketRequest` type, read from
+// https://paycenter.piraeusbank.gr/services/tickets/issuer.asmx?WSDL on
+// 2026-07-28. It is an xsd:sequence, so the order below is part of the
+// contract, not a preference — the manual says as much in passing ("συνίσταται
+// η αποστολή των παραμέτρων με τη σειρά που αυτές εμφανίζονται στο WSDL").
+const TICKET_REQUEST_ORDER = [
+  "Username", "Password", "MerchantId", "PosId", "AcquirerId",
+  "MerchantReference", "RequestType", "ExpirePreauth", "Amount",
+  "CurrencyCode", "Installments", "Bnpl", "Parameters",
+  "BillAddrCity", "BillAddrCountry", "BillAddrLine1", "BillAddrLine2",
+  "BillAddrLine3", "BillAddrPostCode", "BillAddrState",
+  "ShipAddrCity", "ShipAddrCountry", "ShipAddrLine1", "ShipAddrLine2",
+  "ShipAddrLine3", "ShipAddrPostCode", "ShipAddrState",
+  "CardholderName", "Email", "HomePhone", "MobilePhone", "WorkPhone",
+  "RecurringInd", "RecurPurchaseDate", "RecurFreq", "RecurEnd",
+  "AddressMatch", "DeliveryTimeframe", "DeliveryEmailAddress",
+  "ReorderItemsInd", "PreOrderPurchaseInd", "AuthMethod", "AccountAgeInd",
+  "AccountDate", "AccountChangeInd", "AccountChange", "AccountPwdChangeInd",
+  "AccountPwdChange", "ShipAddressUsageInd", "SuspiciousAccActivity",
+  "PassengerData", "AccountVerification", "FundsTransfer",
+] as const;
+
+/**
+ * Declared `minOccurs="1" nillable="true"`: the element has to be in the
+ * sequence even when we have no value, carrying xsi:nil. These are the 3D
+ * Secure risk hints we do not supply. Everything else we skip is minOccurs="0"
+ * and may simply be left out.
+ */
+const REQUIRED_NILLABLE = new Set<string>([
+  "RecurringInd",
+  "RecurFreq",
+  "AddressMatch",
+  "DeliveryTimeframe",
+  "ReorderItemsInd",
+  "PreOrderPurchaseInd",
+  "AuthMethod",
+  "AccountAgeInd",
+  "AccountChangeInd",
+  "AccountPwdChangeInd",
+  "ShipAddressUsageInd",
+  "SuspiciousAccActivity",
+]);
+
 function buildSoapEnvelope(
   cfg: PaycenterConfig,
   fields: Record<string, string>,
 ): string {
-  const body = Object.entries(fields)
-    .map(([name, value]) => `<${name}>${xmlEscape(value)}</${name}>`)
-    .join("");
+  const body = TICKET_REQUEST_ORDER.map((name) => {
+    const value = fields[name];
+    if (value !== undefined) return `<${name}>${xmlEscape(value)}</${name}>`;
+    if (REQUIRED_NILLABLE.has(name)) return `<${name} xsi:nil="true" />`;
+    return "";
+  }).join("");
   return (
     '<?xml version="1.0" encoding="utf-8"?>' +
     '<soap:Envelope xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"' +
@@ -209,6 +255,8 @@ export async function issueTicket(params: {
     );
   }
 
+  // Response shape: IssueNewTicketResponse > IssueNewTicketResult >
+  // { ResultCode, ResultDescription, TranTicket, Timestamp, MinutesToExpiration }.
   const resultCode = readTag(xml, "ResultCode");
   const ticket = readTag(xml, "TranTicket");
 

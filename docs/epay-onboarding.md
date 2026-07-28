@@ -67,21 +67,38 @@
 
 ---
 
-## 3. Τεχνικές διευκρινίσεις που **λείπουν** από το εγχειρίδιο
+## 3. Τεχνικές διευκρινίσεις
 
-Το εγχειρίδιο δίνει το URL του ticketing WS αλλά **όχι** το SOAP envelope. Πρέπει να ζητηθούν ρητά:
+### ✅ Το SOAP contract — λύθηκε, δεν χρειάζεται να ρωτηθεί
 
-1. **Το WSDL** του `https://paycenter.piraeusbank.gr/services/tickets/issuer.asmx` — ή απλή επιβεβαίωση των:
-   - ονόματος λειτουργίας (υποθέτουμε `IssueNewTicket`)
-   - XML namespace (υποθέτουμε `http://piraeusbank.gr/paycenter/redirection`)
-   - `SOAPAction` header
-   - αν τα πεδία του request τυλίγονται σε `<Request>` element
+Το εγχειρίδιο δίνει το URL του ticketing WS αλλά όχι το envelope. Το **WSDL όμως είναι δημόσια προσβάσιμο** χωρίς credentials:
 
-   Ρυθμίζονται με `PAYCENTER_SOAP_METHOD` / `PAYCENTER_SOAP_NAMESPACE` χωρίς αλλαγή κώδικα.
+```
+https://paycenter.piraeusbank.gr/services/tickets/issuer.asmx?WSDL
+```
 
-2. **Follow-up Web Service** — προδιαγραφές, αν θελήσουμε επαναφορά χαμένης απάντησης (χρήσιμο αν ο πελάτης κλείσει το browser μετά τη χρέωση). Δεν δίνεται στο εγχειρίδιο, δίνεται κατόπιν αιτήματος.
+Διαβάστηκε στις 28/07/2026 και επιβεβαιώνει:
 
-3. Αν πάμε σε **PREAUTH**: προδιαγραφές του Web Service ολοκλήρωσης προέγκρισης (αλλιώς γίνεται χειροκίνητα από το AdminTool).
+| | Τιμή |
+|---|---|
+| targetNamespace | `http://piraeusbank.gr/paycenter/redirection` |
+| operation | `IssueNewTicket` |
+| SOAPAction | `http://piraeusbank.gr/paycenter/redirection/IssueNewTicket` |
+| request wrapper | `<Request>` τύπου `TicketRequest` (53 πεδία, `xsd:sequence`) |
+| response | `IssueNewTicketResult` → `ResultCode`, `ResultDescription`, `TranTicket`, `Timestamp`, `MinutesToExpiration` |
+
+Δύο πράγματα που **μόνο** το WSDL αποκαλύπτει και δεν γράφονται πουθενά στο εγχειρίδιο:
+
+- Ο τύπος είναι `xsd:sequence` → **η σειρά των πεδίων είναι μέρος του συμβολαίου**. Η σειρά είναι `Username, Password, MerchantId, PosId, AcquirerId, MerchantReference, RequestType, ExpirePreauth, Amount, CurrencyCode, Installments, Bnpl, Parameters, …` — αισθητά διαφορετική από τη σειρά που τα παρουσιάζει το εγχειρίδιο.
+- Δώδεκα πεδία 3D Secure είναι `minOccurs="1" nillable="true"`, δηλαδή πρέπει να **υπάρχουν** στο μήνυμα ακόμη κι όταν δεν έχουμε τιμή, με `xsi:nil="true"`: `RecurringInd, RecurFreq, AddressMatch, DeliveryTimeframe, ReorderItemsInd, PreOrderPurchaseInd, AuthMethod, AccountAgeInd, AccountChangeInd, AccountPwdChangeInd, ShipAddressUsageInd, SuspiciousAccActivity`.
+
+Και τα δύο είναι υλοποιημένα και ελεγμένα στο `src/lib/paycenter/gateway.ts`.
+
+### Παραμένουν ανοιχτά
+
+1. **Follow-up Web Service** — προδιαγραφές, αν θελήσουμε επαναφορά χαμένης απάντησης (χρήσιμο αν ο πελάτης κλείσει το browser μετά τη χρέωση). Δεν δίνεται στο εγχειρίδιο, δίνεται κατόπιν αιτήματος.
+
+2. Αν πάμε σε **PREAUTH**: προδιαγραφές του Web Service ολοκλήρωσης προέγκρισης (αλλιώς γίνεται χειροκίνητα από το AdminTool).
 
 ---
 
@@ -108,7 +125,7 @@
 | Diners/Discover / American Express; | Χρειάζονται **ξεχωριστό MerchantId + PosId** και ξεχωριστή εμπορική διαδικασία. Προτείνω όχι στη φάση 1. |
 | Νόμισμα | Μόνο EUR (`CurrencyCode=978`). Κάθε άλλο νόμισμα θέλει δικό του MerchantId/PosId. |
 | Google Pay | Ενεργοποιείται αυτόματα, καμία ενέργεια από εμάς. |
-| **Apple Pay;** | **Να ρωτηθεί.** Το εγχειρίδιο Redirection 3.1 αναφέρει Google Pay 17 φορές και Apple Pay **καμία**. Το Apple Pay εμφανίζεται μόνο στο Rest Web Service (direct integration). Για παραλία στη Ζάκυνθο η κίνηση από iPhone δεν είναι αμελητέα — αξίζει να επιβεβαιωθεί αν υποστηρίζεται στη hosted σελίδα. |
+| **Apple Pay;** | **Δεν γίνεται με Redirection.** Ο οδηγός «ApplePay GooglePay» περιγράφει αποκλειστικά direct integration: η επιχείρηση κάνει η ίδια διασύνδεση με Apple/Google και μετά στέλνει `CardNumber` (token), `CAVV`, `Eci`, `WalletType=2` στο Transaction Web Service. Με hosted σελίδα δεν αγγίζουμε ποτέ αυτά τα δεδομένα. Για Apple Pay θα έπρεπε να εγκαταλείψουμε το Redirection → PCI scope, δική μας φόρμα κάρτας, δικό μας 3DS. **Δεν το προτείνω.** Το Google Pay παραμένει διαθέσιμο, αυτόματα. |
 | Παραμετροποίηση σελίδας πληρωμής (λογότυπο); | Προαιρετικό — στέλνουμε τροποποιημένο `default.css` (υπάρχει στον φάκελο `StyleSheet` των προδιαγραφών). |
 
 ---
@@ -153,9 +170,12 @@
 - **Redirection** — η λύση που υλοποιούμε.
 - **Icons** — υποχρεωτικά εικονίδια (§8).
 
-**Αξίζει να κατέβουν**
-- **User Manuals (Admin Tool & vPOS)** — το AdminTool είναι το εργαλείο του καταστήματος (παρακολούθηση συναλλαγών, ακυρώσεις/επιστροφές, ολοκλήρωση προεγκρίσεων). Το αναφέρει 5 φορές το Redirection manual και το χρειαζόμαστε για να γράψουμε τις οδηγίες παράδοσης στον πελάτη.
-- **Web Service** — όχι για να το υλοποιήσουμε, αλλά επειδή είναι το μόνο δημόσιο έγγραφο που πιθανότατα δείχνει **SOAP envelope** για το Paycenter. Το Redirection manual δίνει το URL του ticketing WS αλλά όχι το envelope, οπότε αυτό μπορεί να λύσει το ερώτημα του §3.1 χωρίς αναμονή από την Euronet.
+**Κατέβηκαν 28/07/2026 — τι έδωσαν**
+- **Admin Tool manual v5.2** ✅ χρήσιμο. Πρόσβαση στο <https://paycenter.piraeusbank.gr/AdminTool/>. Καλύπτει αναζήτηση συναλλαγών, **ακύρωση και ολική/μερική επιστροφή**, προεγκρίσεις, αναφορές εκκαθάρισης, διαχείριση χρηστών. Βάση για τις οδηγίες παράδοσης στον πελάτη.
+- **Virtual POS manual v2.3** — προαιρετικό. Χειροκίνητες χρεώσεις από call center. Σημαντική λεπτομέρεια: οι **επιστροφές/ακυρώσεις γίνονται μόνο από AdminTool και μόνο από χρήστη με δικαιώματα Administrator** — άρα ο πελάτης χρειάζεται τουλάχιστον έναν admin λογαριασμό.
+- **Web Service manual v2.4** — δεν περιείχε SOAP envelope (μόνο το URL `…/services/paymentgateway.asmx`). Το κενό καλύφθηκε τελικά από το ίδιο το WSDL (§3).
+- **ApplePay GooglePay Guide v1.0** — απάντησε το ερώτημα του Apple Pay: αφορά αποκλειστικά direct integration, βλ. §5.
+- **BIN Web Service v2.0** — αφορά **μόνο** έλεγχο αν ένα BIN υποστηρίζει δόσεις. Δεν βάζουμε δόσεις.
 
 **Μόνο αν αλλάξει απόφαση**
 - **IRIS eCommerce Guide** — αν ενεργοποιήσουμε IRIS.
@@ -163,10 +183,8 @@
 - **epay by link** — αν το κατάστημα θέλει τηλεφωνικές κρατήσεις με link πληρωμής.
 
 **Δεν χρειάζονται**
-- **Bin Web Service** (διαβάστηκε: αφορά **αποκλειστικά** έλεγχο αν ένα BIN υποστηρίζει **δόσεις** — δεν βάζουμε δόσεις)
 - 3D Secure, Rest Web Service, Tokenization (τα έχουμε ήδη, αφορούν direct integration)
-- Apple Pay / Google Pay Direct Integration (αφορά Rest WS· στο Redirection το Google Pay είναι αυτόματο)
-- Batch File, Recurring Transactions, Redirection (iFrame), Redirection Loyalty, Web Service Loyalty, Virtual POS
+- Batch File, Recurring Transactions, Redirection (iFrame), Redirection Loyalty, Web Service Loyalty
 
 ---
 
@@ -174,10 +192,13 @@
 
 Έτοιμα και ελεγμένα (`src/lib/paycenter/`, `src/app/api/payment/callback`, `src/app/[locale]/pay/handoff`):
 
-- Ticketing μηχανισμός (SOAP) με όλα τα υποχρεωτικά πεδία του §4
+- Ticketing μηχανισμός (SOAP) — envelope **ελεγμένο πεδίο-πρoς-πεδίο απέναντι στο WSDL**: σωστό namespace, SOAPAction, `<Request>` wrapper, ακριβής σειρά 53 πεδίων, `xsi:nil` στα 12 υποχρεωτικά-nillable
 - HTML form POST στο `pay.aspx` με τα πεδία του Παραρτήματος 1
 - Επαλήθευση `HashKey` — **επαληθευμένη με το επίσημο παράδειγμα του Παραρτήματος 4** (`selfTest()` στο `hashkey.ts`)
 - Idempotent χειρισμός απάντησης, αποθήκευση `SupportReferenceID` / `ApprovalCode` / `AuthStatus` κ.λπ.
 - Mock gateway που παράγει τα **πραγματικά** ονόματα παραμέτρων και πραγματικό HashKey
 
-Εκκρεμεί μόνο: τα 5 credentials, η επιβεβαίωση του WSDL, και η απόφαση για τη στατική IP.
+Εκκρεμούν **δύο** πράγματα, κανένα από τα οποία δεν είναι κώδικας:
+
+1. Τα **5 credentials** από την Euronet.
+2. Η απόφαση για τη **στατική IP** (§4).
