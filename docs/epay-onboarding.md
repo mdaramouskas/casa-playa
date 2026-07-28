@@ -108,6 +108,7 @@
 | Diners/Discover / American Express; | Χρειάζονται **ξεχωριστό MerchantId + PosId** και ξεχωριστή εμπορική διαδικασία. Προτείνω όχι στη φάση 1. |
 | Νόμισμα | Μόνο EUR (`CurrencyCode=978`). Κάθε άλλο νόμισμα θέλει δικό του MerchantId/PosId. |
 | Google Pay | Ενεργοποιείται αυτόματα, καμία ενέργεια από εμάς. |
+| **Apple Pay;** | **Να ρωτηθεί.** Το εγχειρίδιο Redirection 3.1 αναφέρει Google Pay 17 φορές και Apple Pay **καμία**. Το Apple Pay εμφανίζεται μόνο στο Rest Web Service (direct integration). Για παραλία στη Ζάκυνθο η κίνηση από iPhone δεν είναι αμελητέα — αξίζει να επιβεβαιωθεί αν υποστηρίζεται στη hosted σελίδα. |
 | Παραμετροποίηση σελίδας πληρωμής (λογότυπο); | Προαιρετικό — στέλνουμε τροποποιημένο `default.css` (υπάρχει στον φάκελο `StyleSheet` των προδιαγραφών). |
 
 ---
@@ -141,6 +142,31 @@
 Τα υπόλοιπα 13 είναι προαιρετικά. Στα test προέγκρισης το `ExpirePreauth` πρέπει να είναι **ακριβώς 30**.
 
 Μετά την επιτυχή ολοκλήρωση ενημερώνουμε την Euronet, στέλνουμε τα live URL + live IP, και παίρνουμε το live account.
+
+---
+
+## 7β. Ποια εγχειρίδια χρειαζόμαστε
+
+Από τη λίστα «Οδηγοί λύσεων eCommerce» του epay portal:
+
+**Τα έχουμε και τα χρειαζόμαστε**
+- **Redirection** — η λύση που υλοποιούμε.
+- **Icons** — υποχρεωτικά εικονίδια (§8).
+
+**Αξίζει να κατέβουν**
+- **User Manuals (Admin Tool & vPOS)** — το AdminTool είναι το εργαλείο του καταστήματος (παρακολούθηση συναλλαγών, ακυρώσεις/επιστροφές, ολοκλήρωση προεγκρίσεων). Το αναφέρει 5 φορές το Redirection manual και το χρειαζόμαστε για να γράψουμε τις οδηγίες παράδοσης στον πελάτη.
+- **Web Service** — όχι για να το υλοποιήσουμε, αλλά επειδή είναι το μόνο δημόσιο έγγραφο που πιθανότατα δείχνει **SOAP envelope** για το Paycenter. Το Redirection manual δίνει το URL του ticketing WS αλλά όχι το envelope, οπότε αυτό μπορεί να λύσει το ερώτημα του §3.1 χωρίς αναμονή από την Euronet.
+
+**Μόνο αν αλλάξει απόφαση**
+- **IRIS eCommerce Guide** — αν ενεργοποιήσουμε IRIS.
+- **Report Files** — αν θελήσουμε συμφωνία εκκαθαρίσεων στο admin panel.
+- **epay by link** — αν το κατάστημα θέλει τηλεφωνικές κρατήσεις με link πληρωμής.
+
+**Δεν χρειάζονται**
+- **Bin Web Service** (διαβάστηκε: αφορά **αποκλειστικά** έλεγχο αν ένα BIN υποστηρίζει **δόσεις** — δεν βάζουμε δόσεις)
+- 3D Secure, Rest Web Service, Tokenization (τα έχουμε ήδη, αφορούν direct integration)
+- Apple Pay / Google Pay Direct Integration (αφορά Rest WS· στο Redirection το Google Pay είναι αυτόματο)
+- Batch File, Recurring Transactions, Redirection (iFrame), Redirection Loyalty, Web Service Loyalty, Virtual POS
 
 ---
 
