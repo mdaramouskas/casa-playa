@@ -73,7 +73,12 @@
     "vat": "VAT 24%",
     "payButton": "Successful payment",
     "failButton": "Failure / Cancel",
-    "footnote": "Once the bank issues MerchantId, HashKey and endpoints, this page is replaced by Paycenter's pay.aspx — the rest of the flow (signed callback, HMAC verification) stays the same."
+    "footnote": "Once Euronet issues AcquirerId/MerchantId/PosId/Username/Password, this page is replaced by Paycenter pay.aspx — the rest of the flow (ticketing, HashKey verification) stays the same."
+  },
+  "payHandoff": {
+    "title": "Going to secure payment",
+    "body": "We're taking you to the bank's payment page. Please don't close this window.",
+    "continue": "Continue to payment"
   },
   "policy": {
     "cancellationTitle": "Cancellation policy",

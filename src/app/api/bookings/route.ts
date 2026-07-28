@@ -183,11 +183,13 @@ export async function POST(request: Request) {
     });
   }
 
+  // The ticketing WS must run before the customer is sent anywhere (§4).
   const issued = await issueTicket({
     reference,
     amountCents: totalCents,
-    currency: cfg.currency,
     locale: input.locale,
+    email: input.email.toLowerCase(),
+    cardholderName: `${input.firstName} ${input.lastName}`,
   });
 
   await prisma.payment.create({
@@ -197,6 +199,7 @@ export async function POST(request: Request) {
       amountCents: totalCents,
       currency: cfg.currency,
       ticket: issued.ticket,
+      parameters: issued.parameters,
     },
   });
 

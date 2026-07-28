@@ -1,19 +1,36 @@
 import { randomBytes } from "crypto";
-import { appBaseUrl, getPaycenterConfig, hasLiveCredentials } from "./config";
+import {
+  appBaseUrl,
+  getPaycenterConfig,
+  hasLiveCredentials,
+  languageCode,
+  passwordHash,
+  requestType,
+  type PaycenterConfig,
+} from "./config";
 
-// Step 2 of the Paycenter Redirection flow: the backend asks the bank for a
-// ticket (SOAP `IssueNewTicket`), then the customer is sent to the hosted
-// payment page with that ticket. Card data never reaches our server.
+// Step 1 of the Redirection flow (Manual §4): before the customer can pay, the
+// transaction is declared to the gateway over SOAP and we get back a
+// `TranTicket`. The ticket is the key that later proves the response is
+// genuine, so it stays server-side — it is never put in a URL or a form field.
 //
-// While `PAYCENTER_MODE=mock` we issue our own ticket and send the customer to
-// a local page that imitates the bank's. Everything downstream (the signed
-// callback, HMAC verification, idempotency) is identical, so switching to the
-// real gateway is a config change plus the SOAP call below.
+// Step 2 (§5): the customer's browser POSTs an HTML form to the hosted payment
+// page. Card data never reaches our server.
+//
+// While `PAYCENTER_MODE=mock` we mint our own ticket and send the customer to a
+// local stand-in page. Everything downstream — the HashKey, its verification,
+// idempotency — is identical, so going live is credentials plus a mode switch.
+
+/** Ticket lifetime per §4; the payment session itself is 15 minutes. */
+export const TICKET_TTL_MINUTES = 30;
 
 export interface IssuedTicket {
+  /** `TranTicket` — secret, HMAC key for the response. Store, never expose. */
   ticket: string;
   /** Where to send the customer next. */
   payUrl: string;
+  /** Echoed back by the gateway and part of the HashKey. */
+  parameters: string;
 }
 
 export function localePrefix(locale: string): string {
@@ -21,37 +38,187 @@ export function localePrefix(locale: string): string {
 }
 
 /**
- * Key used to sign/verify callbacks. In mock mode the bank's HashKey does not
- * exist yet, so a local development key is used — the verification path itself
- * stays exactly the same.
+ * `Parameters` (§4) is an opaque ≤512-char string the gateway hands back
+ * untouched. We use it to carry the customer's language, because the GET form
+ * of the response does not include `LanguageCode`.
  */
-export function signingKey(): string {
+export function encodeParameters(locale: string): string {
+  return `locale=${locale === "en" ? "en" : "el"}`;
+}
+
+export function localeFromParameters(parameters: string | null): "el" | "en" {
+  return parameters?.includes("locale=en") ? "en" : "el";
+}
+
+/** Handoff page that POSTs the customer to the bank. Locale-independent so a
+ *  single Referrer URL can be registered with Euronet. */
+export function handoffUrl(reference: string): string {
+  return `${appBaseUrl()}/pay/handoff/${encodeURIComponent(reference)}`;
+}
+
+/**
+ * The hidden fields of the redirect form (§5, Appendix 1). Note this list does
+ * NOT contain the ticket, the amount or the transaction type — all of that was
+ * already declared through the ticketing WS.
+ */
+export function payFormFields(params: {
+  reference: string;
+  locale: string;
+  paramBackLink?: string;
+}): Record<string, string> {
   const cfg = getPaycenterConfig();
-  if (cfg.hashKey) return cfg.hashKey;
-  if (cfg.mode === "mock") return "casa-playa-mock-hash-key";
-  throw new Error("PAYCENTER_HASH_KEY is not set.");
+  const fields: Record<string, string> = {
+    AcquirerId: cfg.acquirerId,
+    MerchantId: cfg.merchantId,
+    PosId: cfg.posId,
+    User: cfg.username,
+    LanguageCode: languageCode(params.locale),
+    MerchantReference: params.reference,
+  };
+  if (params.paramBackLink) fields.ParamBackLink = params.paramBackLink;
+  return fields;
+}
+
+export function payFormAction(): string {
+  return getPaycenterConfig().payPageUrl;
+}
+
+// ── Ticketing (SOAP) ──────────────────────────────────────────────────
+
+function xmlEscape(value: string): string {
+  return value
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&apos;");
+}
+
+/** §4 allows only Latin letters in `CardholderName`; drop anything else. */
+function latinCardholderName(name: string): string | null {
+  const cleaned = name
+    .normalize("NFKD")
+    .replace(/[^\x20-\x7E]/g, "")
+    .replace(/["';<>]/g, "")
+    .trim();
+  return cleaned.length >= 2 && cleaned.length <= 45 ? cleaned : null;
+}
+
+function buildTicketRequestFields(
+  cfg: PaycenterConfig,
+  params: TicketParams,
+): Record<string, string> {
+  const fields: Record<string, string> = {
+    AcquirerId: cfg.acquirerId,
+    MerchantId: cfg.merchantId,
+    PosId: cfg.posId,
+    Username: cfg.username,
+    Password: passwordHash(cfg),
+    RequestType: requestType(cfg),
+    CurrencyCode: String(cfg.currencyCode),
+    MerchantReference: params.reference,
+    Amount: (params.amountCents / 100).toFixed(2),
+    Installments: "0",
+    // §4: must be 0 for a purchase, 2–30 for a preauth.
+    ExpirePreauth:
+      cfg.transactionType === "PREAUTH" ? String(cfg.expirePreauthDays) : "0",
+    // §4: reserved for future use, always 0.
+    Bnpl: "0",
+    Parameters: params.parameters,
+  };
+
+  // Optional 3D Secure hints — more data here means fewer challenges (§4).
+  if (params.email) fields.Email = params.email;
+  const cardholder = params.cardholderName
+    ? latinCardholderName(params.cardholderName)
+    : null;
+  if (cardholder) fields.CardholderName = cardholder;
+
+  return fields;
+}
+
+function buildSoapEnvelope(
+  cfg: PaycenterConfig,
+  fields: Record<string, string>,
+): string {
+  const body = Object.entries(fields)
+    .map(([name, value]) => `<${name}>${xmlEscape(value)}</${name}>`)
+    .join("");
+  return (
+    '<?xml version="1.0" encoding="utf-8"?>' +
+    '<soap:Envelope xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"' +
+    ' xmlns:xsd="http://www.w3.org/2001/XMLSchema"' +
+    ' xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">' +
+    "<soap:Body>" +
+    `<${cfg.soapMethod} xmlns="${cfg.soapNamespace}">` +
+    `<Request>${body}</Request>` +
+    `</${cfg.soapMethod}>` +
+    "</soap:Body>" +
+    "</soap:Envelope>"
+  );
+}
+
+function readTag(xml: string, tag: string): string | null {
+  const match = new RegExp(`<${tag}[^>]*>([\\s\\S]*?)</${tag}>`, "i").exec(xml);
+  return match ? match[1].trim() : null;
+}
+
+interface TicketParams {
+  reference: string;
+  amountCents: number;
+  locale: string;
+  parameters: string;
+  email?: string;
+  cardholderName?: string;
 }
 
 export async function issueTicket(params: {
   reference: string;
   amountCents: number;
-  currency: string;
   locale: string;
+  email?: string;
+  cardholderName?: string;
 }): Promise<IssuedTicket> {
   const cfg = getPaycenterConfig();
+  const parameters = encodeParameters(params.locale);
 
   if (cfg.mode === "mock" || !hasLiveCredentials(cfg)) {
-    const ticket = `MOCK-${randomBytes(12).toString("hex").toUpperCase()}`;
     return {
-      ticket,
-      payUrl: `${appBaseUrl()}${localePrefix(params.locale)}/pay/mock/${ticket}`,
+      ticket: randomBytes(16).toString("hex"),
+      payUrl: `${appBaseUrl()}${localePrefix(params.locale)}/pay/mock/${encodeURIComponent(params.reference)}`,
+      parameters,
     };
   }
 
-  // TODO: real SOAP call to cfg.issueTicketUrl (IssueNewTicket) once the bank
-  // provides the WSDL, MerchantId/PosId and HashKey; then POST the customer to
-  // cfg.payPageUrl with the returned ticket.
-  throw new Error(
-    `Paycenter mode "${cfg.mode}" is not wired yet — no bank credentials/WSDL.`,
-  );
+  const fields = buildTicketRequestFields(cfg, { ...params, parameters });
+  const envelope = buildSoapEnvelope(cfg, fields);
+
+  const response = await fetch(cfg.issueTicketUrl, {
+    method: "POST",
+    headers: {
+      "Content-Type": "text/xml; charset=utf-8",
+      SOAPAction: `${cfg.soapNamespace.replace(/\/$/, "")}/${cfg.soapMethod}`,
+    },
+    body: envelope,
+  });
+
+  const xml = await response.text();
+  if (!response.ok) {
+    throw new Error(
+      `Paycenter ticketing HTTP ${response.status}: ${xml.slice(0, 500)}`,
+    );
+  }
+
+  const resultCode = readTag(xml, "ResultCode");
+  const ticket = readTag(xml, "TranTicket");
+
+  // §4: ResultCode 0 is the only success, and only then is TranTicket present.
+  if (resultCode !== "0" || !ticket) {
+    const description = readTag(xml, "ResultDescription") ?? "unknown error";
+    throw new Error(
+      `Paycenter ticketing failed (ResultCode=${resultCode}): ${description}`,
+    );
+  }
+
+  return { ticket, payUrl: handoffUrl(params.reference), parameters };
 }

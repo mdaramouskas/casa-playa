@@ -73,7 +73,12 @@
     "vat": "ΦΠΑ 24%",
     "payButton": "Επιτυχής πληρωμή",
     "failButton": "Αποτυχία / Ακύρωση",
-    "footnote": "Όταν η τράπεζα δώσει MerchantId, HashKey και endpoints, η σελίδα αυτή αντικαθίσταται από το pay.aspx του Paycenter — η υπόλοιπη ροή (υπογεγραμμένο callback, έλεγχος HMAC) μένει ίδια."
+    "footnote": "Όταν η Euronet δώσει AcquirerId/MerchantId/PosId/Username/Password, η σελίδα αυτή αντικαθίσταται από το pay.aspx του Paycenter — η υπόλοιπη ροή (ticketing, επαλήθευση HashKey) μένει ίδια."
+  },
+  "payHandoff": {
+    "title": "Μετάβαση στην ασφαλή πληρωμή",
+    "body": "Σας μεταφέρουμε στη σελίδα πληρωμής της τράπεζας. Μην κλείσετε το παράθυρο.",
+    "continue": "Συνέχεια στην πληρωμή"
   },
   "policy": {
     "cancellationTitle": "Πολιτική ακύρωσης",

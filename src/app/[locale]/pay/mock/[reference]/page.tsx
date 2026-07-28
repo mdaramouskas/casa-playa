@@ -3,57 +3,91 @@ import { getTranslations, setRequestLocale } from "next-intl/server";
 import { prisma } from "@/lib/prisma";
 import { formatPrice, vatBreakdown } from "@/lib/money";
 import { getPaycenterConfig } from "@/lib/paycenter/config";
-import { signingKey, localePrefix } from "@/lib/paycenter/gateway";
-import { buildSignedString, computeHmac } from "@/lib/paycenter/hmac";
+import { localePrefix } from "@/lib/paycenter/gateway";
+import { computeHashKey } from "@/lib/paycenter/hashkey";
 
 // Stand-in for the bank's hosted payment page (pay.aspx) while
 // PAYCENTER_MODE=mock. It deliberately does NOT imitate the bank's branding and
-// takes no card details — it only lets you drive the two outcomes the real
-// gateway produces, and it posts back the same HMAC-signed callback.
+// takes no card details — it only drives the two outcomes the real gateway
+// produces, using the real response parameter names and a real HashKey computed
+// from the stored ticket, so the verification path exercised here is the
+// production one.
+//
+// Keyed on the booking reference, not the ticket: the ticket is the HMAC key
+// and must never appear in a URL.
 
 export const dynamic = "force-dynamic";
 
 export default async function MockPaymentPage({
   params,
 }: {
-  params: Promise<{ locale: string; ticket: string }>;
+  params: Promise<{ locale: string; reference: string }>;
 }) {
-  const { locale, ticket } = await params;
+  const { locale, reference } = await params;
   setRequestLocale(locale);
   const t = await getTranslations("mockPay");
   const common = await getTranslations("common");
 
-  const payment = await prisma.payment.findFirst({
-    where: { ticket },
-    include: { booking: { include: { product: true } } },
+  const booking = await prisma.booking.findUnique({
+    where: { reference },
+    include: { product: true, payment: true },
   });
-  if (!payment) notFound();
+  const payment = booking?.payment;
+  if (!booking || !payment || !payment.ticket) notFound();
 
   if (payment.processedAt) {
     const done = payment.status === "PAID" ? "success" : "failure";
-    redirect(
-      `${localePrefix(locale)}/payment/${done}?ref=${payment.booking.reference}`,
-    );
+    redirect(`${localePrefix(locale)}/payment/${done}?ref=${reference}`);
   }
 
   const cfg = getPaycenterConfig();
   const { netCents, vatCents } = vatBreakdown(payment.amountCents);
+  const ticket = payment.ticket;
+  const parameters = payment.parameters ?? "";
+  // SupportReferenceID is an integer at the bank. Derived from the payment id
+  // so it is stable across re-renders and identical in both outcome forms.
+  const supportReferenceId = String(
+    parseInt(payment.id.slice(-8), 36) % 1_000_000,
+  ).padStart(6, "0");
 
-  function signedFields(resultCode: string, description: string) {
+  /** Mirrors the POST response of §5, including the signed HashKey. */
+  function responseFields(approved: boolean): Record<string, string> {
     const fields: Record<string, string> = {
-      MerchantReference: payment!.booking.reference,
-      TicketNumber: ticket,
-      TransactionId: `MOCKTX${payment!.id.slice(-10).toUpperCase()}`,
-      ResultCode: resultCode,
-      ResultDescription: description,
-      Amount: (payment!.amountCents / 100).toFixed(2),
-      Currency: payment!.currency,
-      Locale: locale,
+      SupportReferenceID: supportReferenceId,
+      ResultCode: "0",
+      ResultDescription: "",
+      StatusFlag: approved ? "Success" : "Failure",
+      ResponseCode: approved ? "00" : "05",
+      ResponseDescription: approved ? "Approved" : "Do not honor",
+      LanguageCode: locale === "en" ? "en-US" : "el-GR",
+      MerchantReference: reference,
+      TransactionId: `MOCK${supportReferenceId}`,
+      ApprovalCode: approved ? "123456" : "",
+      RetrievalRef: approved ? `MOCK${supportReferenceId}` : "",
+      AuthStatus: approved ? "01" : "03",
+      PackageNo: approved ? "1" : "",
+      CardType: "1",
+      PaymentMethod: "Card",
+      TraceID: `MOCKTRACE${supportReferenceId}`,
+      Parameters: parameters,
     };
-    return {
-      ...fields,
-      HashKey: computeHmac(buildSignedString(fields), signingKey()),
-    };
+    // §5: the HashKey is only sent for a successful transaction.
+    fields.HashKey = approved
+      ? computeHashKey({
+          tranTicket: ticket,
+          posId: cfg.posId,
+          acquirerId: cfg.acquirerId,
+          merchantReference: reference,
+          approvalCode: fields.ApprovalCode,
+          parameters,
+          responseCode: fields.ResponseCode,
+          supportReferenceId,
+          authStatus: fields.AuthStatus,
+          packageNo: fields.PackageNo,
+          statusFlag: fields.StatusFlag,
+        })
+      : "";
+    return fields;
   }
 
   const outcomes = [
@@ -61,13 +95,13 @@ export default async function MockPaymentPage({
       key: "pay",
       label: t("payButton"),
       className: "bg-emerald-600 hover:bg-emerald-700",
-      fields: signedFields("0", "Approved"),
+      fields: responseFields(true),
     },
     {
       key: "fail",
       label: t("failButton"),
       className: "bg-neutral-600 hover:bg-neutral-700",
-      fields: signedFields("1", "Declined by issuer"),
+      fields: responseFields(false),
     },
   ];
 
@@ -90,14 +124,14 @@ export default async function MockPaymentPage({
           </div>
           <div className="flex justify-between">
             <dt className="text-neutral-600">{t("reference")}</dt>
-            <dd className="font-mono">{payment.booking.reference}</dd>
+            <dd className="font-mono">{reference}</dd>
           </div>
           <div className="flex justify-between">
             <dt className="text-neutral-600">{t("description")}</dt>
             <dd className="text-right">
-              {payment.booking.product.name}
-              {payment.booking.timeSlot ? ` · ${payment.booking.timeSlot}` : ""}
-              {` · ${payment.booking.persons} ${common("persons")}`}
+              {booking.product.name}
+              {booking.timeSlot ? ` · ${booking.timeSlot}` : ""}
+              {` · ${booking.persons} ${common("persons")}`}
             </dd>
           </div>
           <div className="flex justify-between border-t border-neutral-200 pt-2">
