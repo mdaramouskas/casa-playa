@@ -6,8 +6,11 @@ import { Manrope } from "next/font/google";
 import { routing } from "@/i18n/routing";
 import "../globals.css";
 
+// Exposed as --font-manrope, not --font-sans: globals.css declares --font-sans
+// as a Tailwind theme token, and having both write the same custom property on
+// :root left the winner up to source order.
 const manrope = Manrope({
-  variable: "--font-sans",
+  variable: "--font-manrope",
   subsets: ["latin", "greek"],
   display: "swap",
 });

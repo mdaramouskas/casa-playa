@@ -1,6 +1,17 @@
 @import "tailwindcss";
 
+/* The site has exactly one designed look: light. Every surface is hardcoded
+   light (bg-white cards, neutral-200 borders, neutral-600 labels) and there is
+   not a single `dark:` utility in the app. The create-next-app boilerplate used
+   to flip these variables on prefers-color-scheme, which inverted only the page
+   background and the inherited text colour — so on a machine in dark mode the
+   cards stayed white while every value without an explicit colour class turned
+   near-white and became unreadable.
+
+   `color-scheme: light` additionally keeps form controls and scrollbars light
+   rather than letting the browser render them dark against the page. */
 :root {
+  color-scheme: light;
   --background: #ffffff;
   --foreground: #171717;
 }
@@ -8,19 +19,12 @@
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  /* Manrope is loaded by next/font in the locale layout as --font-manrope. */
+  --font-sans: var(--font-manrope), ui-sans-serif, system-ui, sans-serif;
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-sans);
 }

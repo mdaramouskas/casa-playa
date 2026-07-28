@@ -6,7 +6,7 @@
     "vatIncluded": "incl. 24% VAT",
     "perSet": "per set",
     "perPerson": "person",
-    "persons": "people",
+    "persons": "{count, plural, one {person} other {people}}",
     "total": "Total"
   },
   "nav": {

@@ -43,7 +43,7 @@ export default async function PaymentSuccessPage({
           <div className="flex justify-between">
             <dt className="text-neutral-600">{booking.product.name}</dt>
             <dd>
-              {booking.persons} {common("persons")}
+              {booking.persons} {common("persons", { count: booking.persons })}
             </dd>
           </div>
           <div className="flex justify-between">

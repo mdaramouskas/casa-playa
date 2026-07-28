@@ -6,7 +6,7 @@
     "vatIncluded": "με ΦΠΑ 24%",
     "perSet": "ανά σετ",
     "perPerson": "άτομο",
-    "persons": "άτομα",
+    "persons": "{count, plural, one {άτομο} other {άτομα}}",
     "total": "Σύνολο"
   },
   "nav": {

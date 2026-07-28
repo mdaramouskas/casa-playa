@@ -131,7 +131,7 @@ export default async function MockPaymentPage({
             <dd className="text-right">
               {booking.product.name}
               {booking.timeSlot ? ` · ${booking.timeSlot}` : ""}
-              {` · ${booking.persons} ${common("persons")}`}
+              {` · ${booking.persons} ${common("persons", { count: booking.persons })}`}
             </dd>
           </div>
           <div className="flex justify-between border-t border-neutral-200 pt-2">
