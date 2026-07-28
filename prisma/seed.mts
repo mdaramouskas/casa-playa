@@ -45,25 +45,22 @@ async function main() {
           productId: product.id,
           name: variant.name,
           nameEn: variant.nameEn,
+          priceCents: variant.priceCents,
           sortOrder: index,
         },
-        update: { nameEn: variant.nameEn, sortOrder: index, active: true },
+        update: {
+          nameEn: variant.nameEn,
+          priceCents: variant.priceCents,
+          sortOrder: index,
+          active: true,
+        },
       });
 
       for (const [slotIndex, time] of variant.slots.entries()) {
         await prisma.timeSlot.upsert({
           where: { variantId_time: { variantId: saved.id, time } },
-          create: {
-            variantId: saved.id,
-            time,
-            capacity: variant.slotCapacity,
-            sortOrder: slotIndex,
-          },
-          update: {
-            capacity: variant.slotCapacity,
-            sortOrder: slotIndex,
-            active: true,
-          },
+          create: { variantId: saved.id, time, sortOrder: slotIndex },
+          update: { sortOrder: slotIndex, active: true },
         });
       }
 

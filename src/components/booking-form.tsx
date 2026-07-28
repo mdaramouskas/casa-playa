@@ -1,26 +1,26 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useTranslations } from "next-intl";
 import dayjs from "dayjs";
 import type { DisplayProduct } from "@/lib/catalog";
+import type { Availability } from "@/lib/availability";
 import { formatPrice } from "@/lib/money";
+import { quoteBooking } from "@/lib/pricing";
 
-// Date → time slot → quantity → customer details, then off to the gateway.
-// Prices shown here are informational; the API recomputes them server-side.
+// Date → time → people → details, then off to the gateway. Prices and unit
+// counts shown here are informational; the API recomputes them server-side.
 
 const MONTHS_AHEAD = 12;
 /** Booking lead time in days — 1 = from tomorrow on, today is not bookable. */
 const MIN_DAYS_AHEAD = 1;
+const MAX_PERSONS_FALLBACK = 12;
 
 function monthGrid(month: dayjs.Dayjs) {
   const first = month.startOf("month");
   // Sunday-first, like the legacy calendar.
-  const leading = first.day();
-  const days: (dayjs.Dayjs | null)[] = Array(leading).fill(null);
-  for (let d = 0; d < month.daysInMonth(); d++) {
-    days.push(first.add(d, "day"));
-  }
+  const days: (dayjs.Dayjs | null)[] = Array(first.day()).fill(null);
+  for (let d = 0; d < month.daysInMonth(); d++) days.push(first.add(d, "day"));
   while (days.length % 7 !== 0) days.push(null);
   return days;
 }
@@ -37,30 +37,90 @@ export function BookingForm({
   const common = useTranslations("common");
   const policy = useTranslations("policy");
 
-  // No same-day bookings: the earliest bookable day is tomorrow.
   const firstBookable = useMemo(
     () => dayjs().startOf("day").add(MIN_DAYS_AHEAD, "day"),
     [],
   );
   const [month, setMonth] = useState(firstBookable.startOf("month"));
   const [date, setDate] = useState<string | null>(null);
-  const [variantName, setVariantName] = useState(
-    product.variants[0]?.name ?? "",
-  );
   const [timeSlot, setTimeSlot] = useState<string | null>(null);
-  const [quantity, setQuantity] = useState(product.minQty || 1);
+  const [personsByVariant, setPersonsByVariant] = useState<
+    Record<string, number>
+  >(() => ({ [product.variants[0]?.name ?? ""]: product.minQty || 1 }));
+  const [availability, setAvailability] = useState<Availability | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const maxMonth = firstBookable.add(MONTHS_AHEAD, "month").startOf("month");
-  const days = monthGrid(month);
   const weekdays =
     locale === "en"
       ? ["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"]
       : ["Κυ", "Δε", "Τρ", "Τε", "Πε", "Πα", "Σα"];
 
-  const subtotal = product.priceCents * quantity;
-  const ready = Boolean(date && (!product.requiresSlot || timeSlot));
+  // Variants share one slot grid — for the restaurant the tables are the same
+  // tables whichever menu you pick.
+  const slots = product.variants[0]?.slots ?? [];
+  const maxPersons =
+    product.maxPersons ?? product.personsPerUnit * MAX_PERSONS_FALLBACK;
+
+  const quote = quoteBooking(
+    {
+      name: product.name,
+      priceCents: product.priceCents,
+      pricingUnit: product.pricingUnit,
+      extraPersonPriceCents: product.extraPersonPriceCents,
+      allowExtraPerson: product.allowExtraPerson,
+      personsPerUnit: product.personsPerUnit,
+    },
+    product.variants.map((v) => ({
+      variantId: v.id,
+      name: v.name,
+      priceCents: v.priceCents,
+      persons: personsByVariant[v.name] ?? 0,
+    })),
+  );
+
+  useEffect(() => {
+    if (!date) return;
+    let cancelled = false;
+    fetch(`/api/availability?slug=${product.slug}&date=${date}`)
+      .then((r) => (r.ok ? r.json() : null))
+      .then((data) => {
+        if (!cancelled) setAvailability(data);
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, [date, product.slug]);
+
+  function remainingAt(time: string): number | null {
+    const slot = availability?.slots.find((s) => s.time === time);
+    return slot ? slot.remaining : null;
+  }
+
+  const selectedRemaining = timeSlot ? remainingAt(timeSlot) : null;
+  const overCapacity =
+    selectedRemaining !== null && quote.units > selectedRemaining;
+  const ready =
+    Boolean(date) &&
+    (!product.requiresSlot || Boolean(timeSlot)) &&
+    quote.persons > 0 &&
+    !overCapacity;
+
+  function setPersons(variantName: string, value: number) {
+    setPersonsByVariant((current) => {
+      const next = { ...current, [variantName]: Math.max(0, value) };
+      const total = Object.values(next).reduce((sum, n) => sum + n, 0);
+      return total > maxPersons ? current : next;
+    });
+  }
+
+  function lineLabel(line: (typeof quote.lines)[number]) {
+    if (line.kind === "SET") return t("sets");
+    if (line.kind === "EXTRA_PERSON") return t("extraLounger");
+    return line.label;
+  }
 
   function errorMessage(code: unknown): string {
     switch (code) {
@@ -70,6 +130,8 @@ export function BookingForm({
         return t("errors.invalidDate");
       case "invalid_coupon":
         return t("errors.invalidCoupon");
+      case "too_many_persons":
+        return t("errors.tooManyPersons", { max: maxPersons });
       default:
         return t("errors.generic");
     }
@@ -86,10 +148,9 @@ export function BookingForm({
         headers: { "content-type": "application/json" },
         body: JSON.stringify({
           productSlug: product.slug,
-          variantName: variantName || undefined,
+          personsByVariant,
           date,
           timeSlot: timeSlot ?? undefined,
-          quantity,
           firstName: String(data.get("firstName") ?? ""),
           lastName: String(data.get("lastName") ?? ""),
           email: String(data.get("email") ?? ""),
@@ -129,10 +190,12 @@ export function BookingForm({
               «
             </button>
             <span className="font-medium">
-              {month.toDate().toLocaleDateString(locale === "en" ? "en-GB" : "el-GR", {
-                month: "long",
-                year: "numeric",
-              })}
+              {month
+                .toDate()
+                .toLocaleDateString(locale === "en" ? "en-GB" : "el-GR", {
+                  month: "long",
+                  year: "numeric",
+                })}
             </span>
             <button
               type="button"
@@ -150,7 +213,7 @@ export function BookingForm({
                 {w}
               </span>
             ))}
-            {days.map((day, i) => {
+            {monthGrid(month).map((day, i) => {
               if (!day) return <span key={`x${i}`} />;
               const value = day.format("YYYY-MM-DD");
               const past = day.isBefore(firstBookable);
@@ -160,7 +223,11 @@ export function BookingForm({
                   key={value}
                   type="button"
                   disabled={past}
-                  onClick={() => setDate(value)}
+                  onClick={() => {
+                    setDate(value);
+                    setTimeSlot(null);
+                    setAvailability(null);
+                  }}
                   className={`rounded-md px-2 py-1.5 transition ${
                     selected
                       ? "bg-sky-900 font-semibold text-white"
@@ -175,76 +242,139 @@ export function BookingForm({
             })}
           </div>
         </div>
+
+        {date && availability?.dailyRemaining !== null &&
+          availability?.dailyRemaining !== undefined && (
+            <p className="mt-3 text-sm text-neutral-600">
+              {t("setsLeft", { count: availability.dailyRemaining })}
+            </p>
+          )}
       </section>
 
-      {/* ── Variants + slots ── */}
+      {/* ── Time slots ── */}
       {product.requiresSlot && (
-        <section className="space-y-6">
-          {product.variants.map((v) => (
-            <div key={v.name}>
-              <h2 className="rounded-t-xl bg-amber-500 px-6 py-3 text-center text-lg font-medium text-white">
-                {v.name}
-              </h2>
-              <div className="grid grid-cols-2 gap-3 rounded-b-xl border border-t-0 border-neutral-200 bg-white p-4 sm:grid-cols-4">
-                {v.slots.map((time) => {
-                  const active = variantName === v.name && timeSlot === time;
-                  return (
-                    <button
-                      key={time}
-                      type="button"
-                      onClick={() => {
-                        setVariantName(v.name);
-                        setTimeSlot(time);
-                      }}
-                      className={`rounded-lg border px-4 py-3 text-center transition ${
-                        active
-                          ? "border-sky-900 bg-sky-900 text-white"
-                          : "border-neutral-200 hover:border-sky-400"
-                      }`}
-                    >
-                      <span className="block">{time}</span>
-                      {product.priceCents > 0 && (
-                        <span className="mt-1 block text-sm">
-                          {c("from")} {formatPrice(product.priceCents)}
-                        </span>
-                      )}
-                      <span className="mt-1 block text-sm font-semibold">
-                        {common("book")}
-                      </span>
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-          ))}
+        <section>
+          <h2 className="rounded-t-xl bg-amber-500 px-6 py-3 text-center text-lg font-medium text-white">
+            {product.allowMixedVariants
+              ? t("timeSlot")
+              : (product.variants[0]?.name ?? t("timeSlot"))}
+          </h2>
+          <div className="grid grid-cols-2 gap-3 rounded-b-xl border border-t-0 border-neutral-200 bg-white p-4 sm:grid-cols-4">
+            {slots.map((time) => {
+              const remaining = remainingAt(time);
+              const soldOut = date !== null && remaining === 0;
+              const active = timeSlot === time;
+              return (
+                <button
+                  key={time}
+                  type="button"
+                  disabled={soldOut}
+                  onClick={() => setTimeSlot(time)}
+                  className={`rounded-lg border px-4 py-3 text-center transition ${
+                    active
+                      ? "border-sky-900 bg-sky-900 text-white"
+                      : soldOut
+                        ? "border-neutral-200 bg-neutral-100 text-neutral-400"
+                        : "border-neutral-200 hover:border-sky-400"
+                  }`}
+                >
+                  <span className="block">{time}</span>
+                  {soldOut ? (
+                    <span className="mt-1 block text-sm">{t("soldOut")}</span>
+                  ) : (
+                    <span className="mt-1 block text-sm">
+                      {remaining !== null
+                        ? t("left", { count: remaining })
+                        : common("book")}
+                    </span>
+                  )}
+                </button>
+              );
+            })}
+          </div>
+          {product.occupancyMinutes && (
+            <p className="mt-2 text-sm text-neutral-600">
+              {t("tableHeldFor", { hours: product.occupancyMinutes / 60 })}
+            </p>
+          )}
         </section>
       )}
 
-      {/* ── Quantity + total ── */}
-      <section className="flex flex-wrap items-end gap-6">
-        <label className="block">
-          <span className="mb-1 block font-semibold">
-            {product.pricingUnit === "PER_PERSON" ? t("persons") : t("quantity")}
-          </span>
-          <input
-            type="number"
-            min={product.minQty}
-            max={product.maxQty ?? 20}
-            value={quantity}
-            onChange={(e) => setQuantity(Math.max(1, Number(e.target.value)))}
-            className="w-28 rounded-lg border border-neutral-300 px-3 py-2"
-          />
-        </label>
-        {product.priceCents > 0 && (
-          <p className="text-lg">
-            {common("total")}:{" "}
-            <span className="font-semibold text-amber-600">
-              {formatPrice(subtotal)}
-            </span>{" "}
-            <span className="text-sm text-neutral-600">
-              ({common("vatIncluded")})
-            </span>
-          </p>
+      {/* ── People ── */}
+      <section className="space-y-4">
+        <h2 className="font-semibold">{t("persons")}</h2>
+        <div className="flex flex-wrap gap-6">
+          {product.variants.map((variant) =>
+            product.allowMixedVariants || product.variants.length > 1 ? (
+              <label key={variant.name} className="block">
+                <span className="mb-1 block text-sm font-medium">
+                  {variant.name}
+                  {variant.priceCents ? (
+                    <span className="ml-2 font-normal text-neutral-600">
+                      {formatPrice(variant.priceCents)} / {common("perPerson")}
+                    </span>
+                  ) : null}
+                </span>
+                <input
+                  type="number"
+                  min={0}
+                  max={maxPersons}
+                  value={personsByVariant[variant.name] ?? 0}
+                  onChange={(e) => setPersons(variant.name, Number(e.target.value))}
+                  className="w-28 rounded-lg border border-neutral-300 px-3 py-2"
+                />
+              </label>
+            ) : (
+              <label key={variant.name} className="block">
+                <span className="mb-1 block text-sm font-medium">
+                  {t("persons")}
+                </span>
+                <input
+                  type="number"
+                  min={1}
+                  max={maxPersons}
+                  value={personsByVariant[variant.name] ?? 1}
+                  onChange={(e) => setPersons(variant.name, Number(e.target.value))}
+                  className="w-28 rounded-lg border border-neutral-300 px-3 py-2"
+                />
+              </label>
+            ),
+          )}
+        </div>
+
+        {/* Breakdown */}
+        {quote.persons > 0 && (
+          <div className="rounded-xl border border-neutral-200 bg-white p-4">
+            <ul className="space-y-1 text-sm">
+              {quote.lines.map((line, i) => (
+                <li key={i} className="flex justify-between gap-4">
+                  <span>
+                    {line.quantity} × {lineLabel(line)}
+                  </span>
+                  <span>
+                    {line.unitPriceCents > 0
+                      ? formatPrice(line.totalCents)
+                      : c("noPrepayment")}
+                  </span>
+                </li>
+              ))}
+            </ul>
+            {quote.subtotalCents > 0 && (
+              <p className="mt-3 flex justify-between border-t border-neutral-200 pt-3 text-lg font-semibold">
+                <span>{common("total")}</span>
+                <span className="text-amber-600">
+                  {formatPrice(quote.subtotalCents)}{" "}
+                  <span className="text-sm font-normal text-neutral-600">
+                    ({common("vatIncluded")})
+                  </span>
+                </span>
+              </p>
+            )}
+          </div>
+        )}
+
+        {overCapacity && (
+          <p className="text-sm text-red-700">{t("errors.soldOut")}</p>
         )}
       </section>
 
@@ -291,9 +421,13 @@ export function BookingForm({
         disabled={!ready || submitting}
         className="w-full rounded-lg bg-amber-500 px-6 py-3 text-lg font-medium text-white transition hover:bg-amber-600 disabled:cursor-not-allowed disabled:opacity-40 sm:w-auto"
       >
-        {submitting ? common("loading") : t("proceedToPayment")}
+        {submitting
+          ? common("loading")
+          : quote.subtotalCents > 0
+            ? t("proceedToPayment")
+            : t("confirmBooking")}
       </button>
-      {!ready && (
+      {!ready && !overCapacity && (
         <p className="text-sm text-neutral-500">{t("selectDateAndTimeFirst")}</p>
       )}
     </form>

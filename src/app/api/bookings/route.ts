@@ -4,11 +4,14 @@ import dayjs from "dayjs";
 import { prisma } from "@/lib/prisma";
 import { generateBookingReference } from "@/lib/reference";
 import { applyDiscount } from "@/lib/money";
+import { quoteBooking, type VariantSelection } from "@/lib/pricing";
+import { getAvailability } from "@/lib/availability";
 import { issueTicket, localePrefix } from "@/lib/paycenter/gateway";
 import { getPaycenterConfig } from "@/lib/paycenter/config";
 
 // Creates a PENDING booking, then hands the customer to the payment gateway.
-// The price is always recomputed here — never trusted from the client.
+// Prices, unit counts and availability are always recomputed here — nothing
+// coming from the client is trusted.
 
 const MAX_DAYS_AHEAD = 365;
 /** Booking lead time: 1 = from tomorrow on, no same-day bookings. */
@@ -16,10 +19,10 @@ const MIN_DAYS_AHEAD = 1;
 
 const bodySchema = z.object({
   productSlug: z.string().min(1),
-  variantName: z.string().min(1).optional(),
+  /** People per variant, e.g. `{ "Seafood Menu": 4, "Meat Menu": 6 }`. */
+  personsByVariant: z.record(z.string(), z.number().int().min(0)),
   date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
   timeSlot: z.string().regex(/^\d{2}:\d{2}$/).optional(),
-  quantity: z.number().int().min(1).max(50),
   firstName: z.string().trim().min(1).max(80),
   lastName: z.string().trim().min(1).max(80),
   email: z.email().max(160),
@@ -37,9 +40,7 @@ function fail(error: string, status = 400) {
 
 export async function POST(request: Request) {
   const parsed = bodySchema.safeParse(await request.json().catch(() => null));
-  if (!parsed.success) {
-    return fail("invalid_request");
-  }
+  if (!parsed.success) return fail("invalid_request");
   const input = parsed.data;
 
   const product = await prisma.product.findUnique({
@@ -47,6 +48,7 @@ export async function POST(request: Request) {
     include: {
       variants: {
         where: { active: true },
+        orderBy: { sortOrder: "asc" },
         include: { timeSlots: { where: { active: true } } },
       },
     },
@@ -60,56 +62,59 @@ export async function POST(request: Request) {
   if (input.date < firstDay || input.date > lastDay) return fail("invalid_date");
   // A DATE column: store UTC midnight so the stored day is exactly input.date.
   const bookingDate = new Date(`${input.date}T00:00:00.000Z`);
-  if (Number.isNaN(bookingDate.getTime())) return fail("invalid_date");
 
-  // ── Variant + slot ──────────────────────────────────────────────────
-  let variant = null;
-  if (input.variantName) {
-    variant =
-      product.variants.find((v) => v.name === input.variantName) ?? null;
+  // ── Variants ────────────────────────────────────────────────────────
+  const selections: VariantSelection[] = [];
+  for (const [name, persons] of Object.entries(input.personsByVariant)) {
+    if (persons === 0) continue;
+    const variant = product.variants.find((v) => v.name === name);
     if (!variant) return fail("invalid_variant");
-  } else if (product.variants.length === 1) {
-    variant = product.variants[0];
+    selections.push({
+      variantId: variant.id,
+      name: variant.name,
+      priceCents: variant.priceCents,
+      persons,
+    });
+  }
+  if (selections.length === 0) return fail("invalid_quantity");
+  if (selections.length > 1 && !product.allowMixedVariants) {
+    return fail("invalid_variant");
   }
 
+  const persons = selections.reduce((sum, s) => sum + s.persons, 0);
+  if (persons < product.minQty) return fail("invalid_quantity");
+  if (product.maxPersons && persons > product.maxPersons) {
+    return fail("too_many_persons");
+  }
+
+  // ── Time slot ───────────────────────────────────────────────────────
   if (product.requiresSlot) {
-    if (!variant) return fail("invalid_variant");
     if (!input.timeSlot) return fail("slot_required");
-    if (!variant.timeSlots.some((s) => s.time === input.timeSlot)) {
-      return fail("invalid_slot");
-    }
+    const slotExists = product.variants.some((v) =>
+      v.timeSlots.some((s) => s.time === input.timeSlot),
+    );
+    if (!slotExists) return fail("invalid_slot");
   }
 
-  if (input.quantity < product.minQty) return fail("invalid_quantity");
-  if (product.maxQty && input.quantity > product.maxQty) {
-    return fail("invalid_quantity");
-  }
+  // ── Price (server-side, VAT-inclusive) ──────────────────────────────
+  const quote = quoteBooking(product, selections);
 
   // ── Availability ────────────────────────────────────────────────────
-  const override = await prisma.availabilityOverride.findUnique({
-    where: { productId_date: { productId: product.id, date: bookingDate } },
-  });
-  const capacity = override?.capacity ?? product.dailyCapacity;
-
-  if (capacity !== null && capacity !== undefined) {
-    if (capacity === 0) return fail("sold_out", 409);
-    const taken = await prisma.booking.aggregate({
-      where: {
-        productId: product.id,
-        bookingDate,
-        status: { in: ["PENDING", "PAID"] },
-      },
-      _sum: { quantity: true },
-    });
-    if ((taken._sum.quantity ?? 0) + input.quantity > capacity) {
+  const availability = await getAvailability(product, input.date);
+  if (
+    availability.dailyRemaining !== null &&
+    quote.units > availability.dailyRemaining
+  ) {
+    return fail("sold_out", 409);
+  }
+  if (input.timeSlot) {
+    const slot = availability.slots.find((s) => s.time === input.timeSlot);
+    if (slot && slot.remaining !== null && quote.units > slot.remaining) {
       return fail("sold_out", 409);
     }
   }
 
-  // ── Price (server-side, VAT-inclusive) ──────────────────────────────
-  const unitPriceCents = product.priceCents;
-  const subtotalCents = unitPriceCents * input.quantity;
-
+  // ── Coupon ──────────────────────────────────────────────────────────
   let discountCents = 0;
   let couponCode: string | null = null;
   if (input.couponCode) {
@@ -122,29 +127,31 @@ export async function POST(request: Request) {
       (!coupon.expiresAt || coupon.expiresAt > new Date()) &&
       (!coupon.maxRedemptions || coupon.timesRedeemed < coupon.maxRedemptions);
     if (!usable) return fail("invalid_coupon");
-    ({ discountCents } = applyDiscount(subtotalCents, coupon));
+    ({ discountCents } = applyDiscount(quote.subtotalCents, coupon));
     couponCode = coupon.code;
   }
-  const totalCents = subtotalCents - discountCents;
+  const totalCents = quote.subtotalCents - discountCents;
 
   // ── Persist ─────────────────────────────────────────────────────────
   const reference = generateBookingReference();
   const cfg = getPaycenterConfig();
-  // Products with no price (the restaurant table on the legacy site) are
-  // reserved without prepayment, so they skip the gateway entirely.
+  // Products with no price (the Restaurant Area) are reserved without payment.
   const needsPayment = totalCents > 0;
+  const singleVariant = selections.length === 1 ? selections[0] : null;
 
   const booking = await prisma.booking.create({
     data: {
       reference,
       productId: product.id,
-      variantId: variant?.id ?? null,
-      variantName: variant?.name ?? null,
+      variantId: singleVariant?.variantId ?? null,
+      variantName: singleVariant?.name ?? null,
       bookingDate,
       timeSlot: input.timeSlot ?? null,
-      quantity: input.quantity,
-      unitPriceCents,
-      subtotalCents,
+      persons: quote.persons,
+      units: quote.units,
+      extraPersons: quote.extraPersons,
+      unitPriceCents: product.priceCents,
+      subtotalCents: quote.subtotalCents,
       discountCents,
       totalCents,
       couponCode,
@@ -156,6 +163,16 @@ export async function POST(request: Request) {
       comments: input.comments ?? null,
       cancellationAccepted: true,
       status: needsPayment ? "PENDING" : "PAID",
+      items: {
+        create: quote.lines.map((line) => ({
+          variantId: line.variantId,
+          kind: line.kind,
+          label: line.label,
+          quantity: line.quantity,
+          unitPriceCents: line.unitPriceCents,
+          totalCents: line.totalCents,
+        })),
+      },
     },
   });
 

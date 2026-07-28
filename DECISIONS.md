@@ -39,24 +39,32 @@ based on the existing Travelotopos booking engine, not reusing its code.
 Source of truth: **`src/data/catalog.ts`** → seeded into Postgres with
 `npm run db:seed` (idempotent upsert; re-run after every edit).
 
-| Product | Price (incl. VAT) | Groups | Slots |
+| Product | Price (incl. VAT) | Capacity | Slots |
 | --- | --- | --- | --- |
-| Book a Cabana Beach Bed 1st Row | 70.00€ | Cabana Beach Bed | 09:00–12:00 / 30′ (7) |
-| Book a Seaside Sun Bed 1st Row | 50.00€ | Seaside Sun Bed | 09:00–12:00 / 30′ (7) |
-| Book a Seaside Sun Bed 2nd Row | 35.00€ | Seaside Sun Bed | 09:00–12:00 / 30′ (7) |
-| Book a Seaside Sun Bed 3rd Row | 35.00€ | Seaside Sun Bed | 09:00–12:00 / 30′ (7) |
-| Book a table Private Restaurant Area | — (no price shown) | Seafood Menu, Meat Menu | 11:00–18:00 / 30′ (15 each) |
+| Book a Cabana Beach Bed 1st Row | 70.00€ / set | 8 sets/day | 09:00–12:00 / 30′ |
+| Book a Seaside Sun Bed 1st Row | 50.00€ / set (+25.00€ extra) | 25 sets/day | 09:00–12:00 / 30′ |
+| Book a Seaside Sun Bed 2nd Row | 35.00€ / set (+17.50€ extra) | 25 sets/day | 09:00–12:00 / 30′ |
+| Book a Seaside Sun Bed 3rd Row | 35.00€ / set (+17.50€ extra) | 25 sets/day | 09:00–12:00 / 30′ |
+| Book a table Private Restaurant Area | Seafood 75.00€, Meat 70.00€ / person | 5 tables × 10 people | 13:00–18:00 / 30′ |
+| Book a table Restaurant Area | free reservation | 20 tables × 4 people | 13:00–18:00 / 30′ |
 
 - Inclusions: cabana & 1st-row sunbed → Wi-Fi, personal towel, changing room &
   shower; 2nd/3rd row → Wi-Fi, changing room & shower.
 - Beds are **all-day** bookings — the slot is only an arrival time
-  (`Product.slotKind = ARRIVAL`). Restaurant slots are real reservation times
-  (`RESERVATION`).
-- A `ProductVariant` is the collapsible orange header above a slot grid; every
-  product has at least one, the restaurant has two (menus).
-- **Still missing**: daily capacity per product / persons per restaurant slot
-  (`dailyCapacity` / `TimeSlot.capacity` are `null` = no limit enforced),
-  product photos, and whether the restaurant table is prepaid.
+  (`Product.slotKind = ARRIVAL`). Restaurant slots are real reservation times.
+- **A set seats 2.** On sunbeds (all three rows) a 3rd person gets an extra
+  lounger at half the set price and does **not** consume one of the 25 sets —
+  those loungers come from the spare umbrellas. So 3 people = 1 set + 1 extra,
+  4 = 2 sets, 5 = 2 sets + 1 extra (`src/lib/pricing.ts`). Cabanas take no
+  extra person.
+- **Restaurant tables are held for 2.5 hours** (`occupancyMinutes = 150`), so a
+  table taken at 13:00 frees at 15:30. A slot is bookable only if every moment
+  it would cover has room (`src/lib/availability.ts`). Seafood and Meat share
+  the same 5 tables, and one booking may mix menus (4 seafood + 6 meat on one
+  table) — hence `BookingItem` rows per menu.
+- Unpaid bookings stop holding capacity after 30 minutes
+  (`PENDING_HOLD_MINUTES`).
+- **Still missing**: product photos.
 
 ## Database
 

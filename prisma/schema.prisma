@@ -51,6 +51,14 @@ enum StaffRole {
   STAFF
 }
 
+// What a priced line of a booking represents.
+enum BookingItemKind {
+  SET // a lounger/cabana set (2 people)
+  EXTRA_PERSON // the 3rd person on a sunbed set — an extra lounger at half price
+  PERSON // a person on a per-person product (restaurant menus)
+  TABLE // a table with no per-person charge
+}
+
 // ── Catalog ────────────────────────────────────────────────────────────
 
 model Product {
@@ -77,18 +85,38 @@ model Product {
   noteEn        String?
   imageUrl      String?
 
-  priceCents    Int // VAT-inclusive unit price (0 = no prepayment / price not shown)
-  currency      String      @default("EUR")
-  pricingUnit   PricingUnit
-  // Units available per day: "sets" for loungers/cabanas, "seats" for tables.
-  // null = not configured yet (no limit enforced).
-  dailyCapacity Int?
-  minQty        Int         @default(1)
-  maxQty        Int?
-  requiresSlot  Boolean     @default(false)
-  slotKind      SlotKind    @default(RESERVATION)
-  active        Boolean     @default(true)
-  sortOrder     Int         @default(0)
+  // VAT-inclusive price of one unit: a set (loungers/cabanas) or one person
+  // (restaurant menus — there the price lives on the variant). 0 = no charge.
+  priceCents            Int
+  currency              String      @default("EUR")
+  pricingUnit           PricingUnit
+  // Price of the extra (3rd) person on a sunbed set — one more lounger at half
+  // the set price. null = no extra person allowed.
+  extraPersonPriceCents Int?
+  allowExtraPerson      Boolean     @default(false)
+  // People covered by one unit: 2 per bed set, 10 per private table, 4 per
+  // restaurant table. Units consumed = ceil(persons / personsPerUnit).
+  personsPerUnit        Int         @default(2)
+  maxPersons            Int?
+  // A booking may split its people across variants (Seafood + Meat menu).
+  allowMixedVariants    Boolean     @default(false)
+
+  // Units bookable per day — sunbeds/cabanas, which are all-day.
+  // null = no daily limit.
+  dailyCapacity    Int?
+  // Units bookable per time slot — restaurant tables. Shared across all
+  // variants of the product. null = no per-slot limit.
+  slotCapacity     Int?
+  // How long one booking holds a unit, in minutes (tables: 150 = 2.5h). A slot
+  // is free again once this has elapsed. null = holds the whole day.
+  occupancyMinutes Int?
+
+  minQty       Int      @default(1)
+  maxQty       Int?
+  requiresSlot Boolean  @default(false)
+  slotKind     SlotKind @default(RESERVATION)
+  active       Boolean  @default(true)
+  sortOrder    Int      @default(0)
 
   variants  ProductVariant[]
   overrides AvailabilityOverride[]
@@ -102,16 +130,20 @@ model Product {
 // above the slot grid ("Cabana Beach Bed", "Seafood Menu", "Meat Menu").
 // Every product has at least one.
 model ProductVariant {
-  id        String  @id @default(cuid())
-  productId String
-  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
-  name      String
-  nameEn    String?
-  active    Boolean @default(true)
-  sortOrder Int     @default(0)
+  id         String  @id @default(cuid())
+  productId  String
+  product    Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  name       String
+  nameEn     String?
+  // Per-person price when the variant is priced (Seafood 75€, Meat 70€).
+  // null = use the product price.
+  priceCents Int?
+  active     Boolean @default(true)
+  sortOrder  Int     @default(0)
 
   timeSlots TimeSlot[]
   bookings  Booking[]
+  items     BookingItem[]
 
   @@unique([productId, name])
 }
@@ -152,14 +184,19 @@ model Booking {
   variant     ProductVariant? @relation(fields: [variantId], references: [id])
   variantName String? // snapshot, e.g. "Seafood Menu"
 
-  bookingDate    DateTime @db.Date // date of use (X)
-  timeSlot       String? // "13:00" — arrival time (beds) or reservation time (tables)
-  quantity       Int // sets or persons
+  bookingDate  DateTime @db.Date // date of use (X)
+  timeSlot     String? // "13:00" — arrival time (beds) or reservation time (tables)
+  persons      Int // people on the booking
+  // Units held against capacity: bed sets, or tables. The extra (3rd) person on
+  // a sunbed rides along on the same set and does not consume one.
+  units        Int      @default(1)
+  extraPersons Int      @default(0)
+
   unitPriceCents Int // snapshot, VAT-inclusive
-  subtotalCents  Int // unit * qty before discount
-  discountCents  Int      @default(0)
+  subtotalCents  Int // sum of the item lines, before discount
+  discountCents  Int     @default(0)
   totalCents     Int // locked amount actually charged
-  currency       String   @default("EUR")
+  currency       String  @default("EUR")
   couponCode     String?
 
   // Customer details
@@ -177,6 +214,7 @@ model Booking {
   originalBookingDate DateTime?     @db.Date // first date before any reschedule
 
   payment Payment?
+  items   BookingItem[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -184,6 +222,25 @@ model Booking {
   @@index([bookingDate])
   @@index([status])
   @@index([email])
+}
+
+// One priced line of a booking: "2 sets", "1 extra lounger", "4 × Seafood
+// Menu". A single restaurant booking may mix menus, hence the separate rows.
+model BookingItem {
+  id        String  @id @default(cuid())
+  bookingId String
+  booking   Booking @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+
+  variantId String?
+  variant   ProductVariant? @relation(fields: [variantId], references: [id])
+
+  kind           BookingItemKind
+  label          String // snapshot, e.g. "Seafood Menu"
+  quantity       Int // sets, extra loungers or people
+  unitPriceCents Int
+  totalCents     Int
+
+  @@index([bookingId])
 }
 
 model Payment {

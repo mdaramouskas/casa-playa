@@ -1,6 +1,6 @@
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
-import { listProducts } from "@/lib/catalog";
+import { listProducts, fromPriceCents } from "@/lib/catalog";
 import { formatPrice } from "@/lib/money";
 
 export const dynamic = "force-dynamic";
@@ -69,9 +69,23 @@ export default async function HomePage({
 
               <div className="flex shrink-0 flex-col items-start gap-3 sm:items-end">
                 <p className="text-xl font-semibold text-amber-600">
-                  {product.priceCents > 0
-                    ? formatPrice(product.priceCents)
-                    : c("noPrepayment")}
+                  {fromPriceCents(product) > 0 ? (
+                    <>
+                      {product.pricingUnit === "PER_PERSON" && (
+                        <span className="mr-1 text-sm font-normal text-neutral-600">
+                          {c("from")}
+                        </span>
+                      )}
+                      {formatPrice(fromPriceCents(product))}
+                      {product.pricingUnit === "PER_PERSON" && (
+                        <span className="ml-1 text-sm font-normal text-neutral-600">
+                          / {common("perPerson")}
+                        </span>
+                      )}
+                    </>
+                  ) : (
+                    c("noPrepayment")
+                  )}
                 </p>
                 <Link
                   href={`/book/${product.slug}`}

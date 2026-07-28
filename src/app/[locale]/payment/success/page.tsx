@@ -24,7 +24,7 @@ export default async function PaymentSuccessPage({
   const booking = ref
     ? await prisma.booking.findUnique({
         where: { reference: ref },
-        include: { product: true },
+        include: { product: true, items: true },
       })
     : null;
 
@@ -42,7 +42,9 @@ export default async function PaymentSuccessPage({
         <dl className="mt-8 space-y-2 rounded-2xl border border-neutral-200 bg-white p-6 text-left text-sm">
           <div className="flex justify-between">
             <dt className="text-neutral-600">{booking.product.name}</dt>
-            <dd>× {booking.quantity}</dd>
+            <dd>
+              {booking.persons} {common("persons")}
+            </dd>
           </div>
           <div className="flex justify-between">
             <dt className="text-neutral-600">{b("selectDate")}</dt>
@@ -51,12 +53,19 @@ export default async function PaymentSuccessPage({
               {booking.timeSlot ? ` · ${booking.timeSlot}` : ""}
             </dd>
           </div>
-          {booking.variantName && (
-            <div className="flex justify-between">
-              <dt className="text-neutral-600">Menu</dt>
-              <dd>{booking.variantName}</dd>
+          {booking.items.map((item) => (
+            <div key={item.id} className="flex justify-between">
+              <dt className="text-neutral-600">
+                {item.quantity} ×{" "}
+                {item.kind === "SET"
+                  ? b("sets")
+                  : item.kind === "EXTRA_PERSON"
+                    ? b("extraLounger")
+                    : item.label}
+              </dt>
+              <dd>{formatPrice(item.totalCents)}</dd>
             </div>
-          )}
+          ))}
           <div className="flex justify-between border-t border-neutral-200 pt-2 text-base font-semibold">
             <dt>{common("total")}</dt>
             <dd>{formatPrice(booking.totalCents)}</dd>

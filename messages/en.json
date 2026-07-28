@@ -5,7 +5,8 @@
     "loading": "Loading…",
     "vatIncluded": "incl. 24% VAT",
     "perSet": "per set",
-    "perPerson": "per person",
+    "perPerson": "person",
+    "persons": "people",
     "total": "Total"
   },
   "nav": {
@@ -45,12 +46,20 @@
     "acceptCancellation": "I accept the cancellation policy",
     "proceedToPayment": "Proceed to payment",
     "reference": "Booking reference",
-    "selectDateAndTimeFirst": "Pick a date and a time first.",
+    "selectDateAndTimeFirst": "Pick a date, a time and the number of people first.",
+    "confirmBooking": "Confirm booking",
+    "sets": "set(s)",
+    "extraLounger": "extra sunbed",
+    "setsLeft": "{count} set(s) left for the day.",
+    "left": "{count} available",
+    "soldOut": "Full",
+    "tableHeldFor": "Each booking holds the table for {hours} hours.",
     "errors": {
       "generic": "Something went wrong. Please try again.",
-      "soldOut": "No availability for the selected date.",
+      "soldOut": "No availability for the selected time.",
       "invalidDate": "Invalid date.",
-      "invalidCoupon": "That discount code is not valid."
+      "invalidCoupon": "That discount code is not valid.",
+      "tooManyPersons": "Up to {max} people per booking. For larger parties please contact us."
     }
   },
   "mockPay": {
