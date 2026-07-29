@@ -1,22 +1,33 @@
 import { notFound, redirect } from "next/navigation";
 import { getTranslations, setRequestLocale } from "next-intl/server";
+import { EpayPage } from "@/components/epay-page";
 import { prisma } from "@/lib/prisma";
-import { formatPrice, vatBreakdown } from "@/lib/money";
 import { getPaycenterConfig } from "@/lib/paycenter/config";
 import { localePrefix } from "@/lib/paycenter/gateway";
 import { computeHashKey } from "@/lib/paycenter/hashkey";
+import {
+  EPAY_LOGO,
+  IRIS_LOGO,
+  cardBrands,
+  secureBrands,
+} from "@/lib/payment-brands";
 
 // Stand-in for the bank's hosted payment page (pay.aspx) while
-// PAYCENTER_MODE=mock. It deliberately does NOT imitate the bank's branding and
-// takes no card details — it only drives the two outcomes the real gateway
-// produces, using the real response parameter names and a real HashKey computed
-// from the stored ticket, so the verification path exercised here is the
-// production one.
+// PAYCENTER_MODE=mock. `EpayPage` reproduces the layout of Redirection Manual
+// pages 6–10 so the test flow looks like the live one; this file supplies the
+// data and, crucially, the real §5 response parameters with a real HashKey
+// computed from the stored ticket, so the verification path exercised here is
+// the production one.
 //
 // Keyed on the booking reference, not the ticket: the ticket is the HMAC key
-// and must never appear in a URL.
+// and must never appear in a URL (§9).
 
 export const dynamic = "force-dynamic";
+
+/** The payment page's own money format, e.g. `€1,00`. */
+function epayAmount(cents: number): string {
+  return `€${(cents / 100).toFixed(2).replace(".", ",")}`;
+}
 
 export default async function MockPaymentPage({
   params,
@@ -41,7 +52,6 @@ export default async function MockPaymentPage({
   }
 
   const cfg = getPaycenterConfig();
-  const { netCents, vatCents } = vatBreakdown(payment.amountCents);
   const ticket = payment.ticket;
   const parameters = payment.parameters ?? "";
   // SupportReferenceID is an integer at the bank. Derived from the payment id
@@ -90,82 +100,55 @@ export default async function MockPaymentPage({
     return fields;
   }
 
-  const outcomes = [
-    {
-      key: "pay",
-      label: t("payButton"),
-      className: "bg-emerald-600 hover:bg-emerald-700",
-      fields: responseFields(true),
-    },
-    {
-      key: "fail",
-      label: t("failButton"),
-      className: "bg-neutral-600 hover:bg-neutral-700",
-      fields: responseFields(false),
-    },
-  ];
-
   return (
-    <main className="mx-auto w-full max-w-lg flex-1 px-6 py-12">
-      <p className="rounded-lg bg-amber-100 px-4 py-3 text-center text-sm font-medium text-amber-900">
-        {t("banner")}
-      </p>
-
-      <div className="mt-6 rounded-2xl border border-neutral-200 bg-white p-6 shadow-sm">
-        <h1 className="text-xl font-semibold">{t("title")}</h1>
-        <p className="mt-1 text-sm text-neutral-600">
-          {t("mode", { mode: cfg.mode, type: cfg.transactionType })}
-        </p>
-
-        <dl className="mt-6 space-y-2 text-sm">
-          <div className="flex justify-between">
-            <dt className="text-neutral-600">{t("merchant")}</dt>
-            <dd className="font-medium">{common("brand")}</dd>
+    <main className="flex-1 bg-white">
+      {/* Not part of the replica: this page must never be mistaken for the
+          bank's, so the banner and the decline control sit outside it. */}
+      <div className="border-b border-amber-200 bg-amber-100 px-5 py-3">
+        <div className="mx-auto flex max-w-[560px] flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <p className="text-sm font-semibold text-amber-900">{t("banner")}</p>
+            <p className="mt-0.5 font-mono text-xs text-amber-800">
+              {t("mode", {
+                mode: cfg.mode,
+                type: cfg.transactionType,
+                reference,
+              })}
+            </p>
           </div>
-          <div className="flex justify-between">
-            <dt className="text-neutral-600">{t("reference")}</dt>
-            <dd className="font-mono">{reference}</dd>
-          </div>
-          <div className="flex justify-between">
-            <dt className="text-neutral-600">{t("description")}</dt>
-            <dd className="text-right">
-              {booking.product.name}
-              {booking.timeSlot ? ` · ${booking.timeSlot}` : ""}
-              {` · ${booking.persons} ${common("persons", { count: booking.persons })}`}
-            </dd>
-          </div>
-          <div className="flex justify-between border-t border-neutral-200 pt-2">
-            <dt className="text-neutral-600">{t("net")}</dt>
-            <dd>{formatPrice(netCents)}</dd>
-          </div>
-          <div className="flex justify-between">
-            <dt className="text-neutral-600">{t("vat")}</dt>
-            <dd>{formatPrice(vatCents)}</dd>
-          </div>
-          <div className="flex justify-between text-lg font-semibold">
-            <dt>{common("total")}</dt>
-            <dd>{formatPrice(payment.amountCents)}</dd>
-          </div>
-        </dl>
-
-        <div className="mt-8 space-y-3">
-          {outcomes.map((outcome) => (
-            <form key={outcome.key} action="/api/payment/callback" method="post">
-              {Object.entries(outcome.fields).map(([name, value]) => (
-                <input key={name} type="hidden" name={name} value={value} />
-              ))}
-              <button
-                type="submit"
-                className={`w-full rounded-lg px-6 py-3 font-medium text-white transition ${outcome.className}`}
-              >
-                {outcome.label}
-              </button>
-            </form>
-          ))}
+          <form
+            action="/api/payment/failure"
+            method="post"
+            className="shrink-0"
+          >
+            {Object.entries(responseFields(false)).map(([name, value]) => (
+              <input key={name} type="hidden" name={name} value={value} />
+            ))}
+            <button
+              type="submit"
+              className="rounded-lg border border-amber-400 px-3 py-1.5 text-xs font-medium text-amber-900 transition hover:bg-amber-200"
+            >
+              {t("simulateDecline")}
+            </button>
+          </form>
         </div>
-
-        <p className="mt-6 text-xs text-neutral-500">{t("footnote")}</p>
       </div>
+
+      <EpayPage
+        merchantName={common("brand")}
+        amount={epayAmount(payment.amountCents)}
+        cancelUrl={`${localePrefix(locale)}/payment/failure?ref=${encodeURIComponent(reference)}`}
+        callbackUrl="/api/payment/success"
+        successFields={responseFields(true)}
+        cardBrands={cardBrands()}
+        secureBrands={secureBrands()}
+        epayLogo={EPAY_LOGO}
+        irisLogo={IRIS_LOGO}
+      />
+
+      <p className="mx-auto max-w-[560px] px-5 pb-12 text-xs text-neutral-500">
+        {t("footnote")}
+      </p>
     </main>
   );
 }

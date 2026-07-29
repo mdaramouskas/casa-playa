@@ -6,7 +6,12 @@ import { generateBookingReference } from "@/lib/reference";
 import { applyDiscount } from "@/lib/money";
 import { quoteBooking, type VariantSelection } from "@/lib/pricing";
 import { getAvailability } from "@/lib/availability";
-import { issueTicket, localePrefix } from "@/lib/paycenter/gateway";
+import {
+  PAY_REF_COOKIE,
+  PAY_REF_COOKIE_MAX_AGE,
+  issueTicket,
+  localePrefix,
+} from "@/lib/paycenter/gateway";
 import { getPaycenterConfig } from "@/lib/paycenter/config";
 
 // Creates a PENDING booking, then hands the customer to the payment gateway.
@@ -203,5 +208,15 @@ export async function POST(request: Request) {
     },
   });
 
-  return NextResponse.json({ reference, redirectUrl: issued.payUrl });
+  // The handoff URL is static so it can be registered with Euronet as a single
+  // Referrer URL — which booking is being paid travels in this cookie instead.
+  const response = NextResponse.json({ reference, redirectUrl: issued.payUrl });
+  response.cookies.set(PAY_REF_COOKIE, reference, {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "lax",
+    path: "/",
+    maxAge: PAY_REF_COOKIE_MAX_AGE,
+  });
+  return response;
 }

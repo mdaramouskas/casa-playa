@@ -50,10 +50,27 @@ export function localeFromParameters(parameters: string | null): "el" | "en" {
   return parameters?.includes("locale=en") ? "en" : "el";
 }
 
-/** Handoff page that POSTs the customer to the bank. Locale-independent so a
- *  single Referrer URL can be registered with Euronet. */
-export function handoffUrl(reference: string): string {
-  return `${appBaseUrl()}/pay/handoff/${encodeURIComponent(reference)}`;
+/**
+ * Cookie carrying the reference of the booking being paid. The handoff URL is
+ * registered with Euronet as the Referrer URL, and the manual does not say
+ * whether that registration is matched exactly or by prefix — so the URL is
+ * kept completely static and the reference travels out of band. As a bonus the
+ * reference stays out of browser history and out of the bank's Referer logs.
+ */
+export const PAY_REF_COOKIE = "cp_pay_ref";
+
+/** Ticket lifetime is the natural bound: after that the handoff is useless. */
+export const PAY_REF_COOKIE_MAX_AGE = TICKET_TTL_MINUTES * 60;
+
+/**
+ * Handoff page that POSTs the customer to the bank — one fixed URL for every
+ * transaction and every language. Deliberately unprefixed: with
+ * `localePrefix: "as-needed"` the default locale has no prefix, so this is the
+ * single value registered as the Referrer URL. The payment page's own language
+ * comes from `LanguageCode`, not from this path.
+ */
+export function handoffUrl(): string {
+  return `${appBaseUrl()}/pay/handoff`;
 }
 
 /**
@@ -268,5 +285,5 @@ export async function issueTicket(params: {
     );
   }
 
-  return { ticket, payUrl: handoffUrl(params.reference), parameters };
+  return { ticket, payUrl: handoffUrl(), parameters };
 }

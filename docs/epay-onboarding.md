@@ -34,14 +34,20 @@
 |---|---|
 | Web site URL | `https://<domain>` |
 | Referrer URL | `https://<domain>/pay/handoff` |
-| Success URL | `https://<domain>/api/payment/callback` |
-| Failure URL | `https://<domain>/api/payment/callback` |
+| Success URL | `https://<domain>/api/payment/success` |
+| Failure URL | `https://<domain>/api/payment/failure` |
 | Backlink URL (κουμπί «Ακύρωση») | `https://<domain>/payment/failure` |
 | IP address | **η στατική IP του server που καλεί το ticketing WS — βλ. §4 παρακάτω** |
 | Μέθοδος απάντησης | **POST** |
 | Υποστήριξη δόσεων | **Όχι** |
 
-> Success και Failure είναι σκόπιμα το **ίδιο** URL: το αποτέλεσμα το κρίνουμε από `ResultCode` + `StatusFlag`, ποτέ από το ποιο URL χτυπήθηκε. Αν επιμείνουν σε δύο διαφορετικά, ζητάμε να τα δηλώσουν και τα δύο και προσθέτουμε δεύτερο route.
+Τα πέντε URL είναι **σταθερά** — δεν έχουν δυναμικά τμήματα, query string ή locale prefix, ώστε να ταιριάζουν είτε ο έλεγχος της Euronet είναι exact match είτε prefix. Δεν χρειάζεται να ρωτηθεί τίποτα.
+
+> **Referrer URL.** Το εγχειρίδιο (§3) το ορίζει μόνο ως «το URL της σελίδας από την οποία θα γίνεται η αποστολή των δεδομένων» και **πουθενά δεν λέει αν ο έλεγχος είναι exact ή prefix**. Γι' αυτό η σελίδα δεν κουβαλάει τον κωδικό κράτησης στο path: ο κωδικός ταξιδεύει σε httpOnly cookie (`cp_pay_ref`), οπότε το URL είναι **ένα και το ίδιο σε κάθε συναλλαγή και στις δύο γλώσσες**. Bonus: ο κωδικός μένει εκτός browser history και εκτός των logs της τράπεζας.
+>
+> Δεύτερο, λιγότερο προφανές: το προεπιλεγμένο `Referrer-Policy` των browsers (`strict-origin-when-cross-origin`) στέλνει **μόνο το origin** σε cross-origin request — δηλαδή η Euronet θα έβλεπε `https://<domain>/` χωρίς το path και το δηλωμένο URL δεν θα ταίριαζε ποτέ. Το `next.config.ts` βάζει `Referrer-Policy: no-referrer-when-downgrade` σε αυτό το path ώστε να φεύγει ολόκληρο το URL σε https→https.
+
+> **Success ≠ Failure.** Το §3 τα ζητάει ως δύο ξεχωριστές δηλώσεις, οπότε δηλώνουμε δύο διαφορετικά URL. Το ποιο URL χτυπήθηκε **δεν** κρίνει το αποτέλεσμα: αυτό βγαίνει από `ResultCode` + `StatusFlag` και, για έγκριση, από επαληθευμένο `HashKey`. Αν έρθει «επιτυχία» στο failure URL (ή το αντίστροφο), γράφεται warning στα logs — σημαίνει λάθος ρύθμιση στην Euronet.
 >
 > Τα URL δηλώνονται **ανά PosId**. Αν χρειαστούμε staging + production ταυτόχρονα, ζητάμε **δύο PosId**.
 
@@ -132,15 +138,19 @@ https://paycenter.piraeusbank.gr/services/tickets/issuer.asmx?WSDL
 
 ## 6. Υποχρεώσεις στο site πριν πάμε live (§8)
 
-Στην **αρχική σελίδα**:
-- Εικονίδια καρτών: Visa, Mastercard, Maestro
-- Badge **Visa Secure**
-- Badge **Mastercard Identity Check**
+**Υλοποιημένο.** Τα αρχεία αντιγράφηκαν αυτούσια από τον φάκελο `Icons/` των προδιαγραφών (και στο <https://www.epayworldwide.gr/wp-content/uploads/2022/10/Icons.zip>) στο `public/payment/`. Δεν έχουν πειραχθεί — τα σχήματα απαιτούν το δικό τους artwork.
 
-Στη σελίδα ασφάλειας (αν υπάρχει): τα ίδια 3D-Secure badges.
-Προαιρετικά: λογότυπο epay, λογότυπο IRIS.
+| Απαίτηση §8 | Πού εμφανίζεται |
+|---|---|
+| Visa, Mastercard, Maestro | Αρχική σελίδα (`PaymentTrustStrip`) + `/security` |
+| Visa Secure | Αρχική σελίδα + `/security` |
+| Mastercard Identity Check | Αρχική σελίδα + `/security` |
+| Λογότυπο epay *(προαιρετικό)* | Σελίδα πληρωμής |
+| Λογότυπο IRIS *(προαιρετικό)* | Σελίδα πληρωμής |
 
-Τα assets είναι στον φάκελο `Icons/` των προδιαγραφών (και στο <https://www.epayworldwide.gr/wp-content/uploads/2022/10/Icons.zip>).
+Ένα σημείο ελέγχου: `src/lib/payment-brands.ts`. Diners / Discover / American Express **δεν** εμφανίζονται μέχρι να υπογραφεί η αντίστοιχη εμπορική συμφωνία — τότε ανοίγουν με `PAYCENTER_EXTRA_SCHEMES=amex,diners,discover`, οπότε προστίθεται αυτόματα και το badge **SafeKey**.
+
+Η σελίδα `/security` είναι «η σελίδα που αναφέρεται σε θέματα ασφάλειας» του §8.
 
 Επίσης απαιτούμενα από τη σύμβαση/κανόνες σχημάτων: ορατή επωνυμία + ΑΦΜ + διεύθυνση, πολιτική ακύρωσης, τιμές με ΦΠΑ πριν την πληρωμή, πολιτική απορρήτου.
 
@@ -190,13 +200,22 @@ https://paycenter.piraeusbank.gr/services/tickets/issuer.asmx?WSDL
 
 ## 8. Κατάσταση υλοποίησης
 
-Έτοιμα και ελεγμένα (`src/lib/paycenter/`, `src/app/api/payment/callback`, `src/app/[locale]/pay/handoff`):
+Έτοιμα και ελεγμένα (`src/lib/paycenter/`, `src/app/api/payment/{success,failure}`, `src/app/[locale]/pay/handoff`):
 
 - Ticketing μηχανισμός (SOAP) — envelope **ελεγμένο πεδίο-πρoς-πεδίο απέναντι στο WSDL**: σωστό namespace, SOAPAction, `<Request>` wrapper, ακριβής σειρά 53 πεδίων, `xsi:nil` στα 12 υποχρεωτικά-nillable
-- HTML form POST στο `pay.aspx` με τα πεδία του Παραρτήματος 1
+- HTML form POST στο `pay.aspx` με τα πεδία του Παραρτήματος 1 (και μόνο αυτά)
+- Σταθερό Referrer URL + `Referrer-Policy` ώστε να φτάνει ολόκληρο στην Euronet
+- Ξεχωριστά Success / Failure URL, με το αποτέλεσμα να κρίνεται από το body
 - Επαλήθευση `HashKey` — **επαληθευμένη με το επίσημο παράδειγμα του Παραρτήματος 4** (`selfTest()` στο `hashkey.ts`)
 - Idempotent χειρισμός απάντησης, αποθήκευση `SupportReferenceID` / `ApprovalCode` / `AuthStatus` κ.λπ.
-- Mock gateway που παράγει τα **πραγματικά** ονόματα παραμέτρων και πραγματικό HashKey
+- §8 εικονίδια σε αρχική + `/security`
+- Mock gateway: αντίγραφο των οθονών των σελίδων 6–10 του εγχειριδίου, με τα **πραγματικά** ονόματα παραμέτρων και πραγματικό HashKey
+
+### Η δοκιμαστική σελίδα πληρωμής
+
+Όσο `PAYCENTER_MODE=mock`, το `/pay/mock/<ref>` αναπαράγει τη σελίδα της Euronet όπως είναι στις σελίδες 6–10 του εγχειριδίου: επιλογή κάρτα / IRIS / Google Pay, τη φόρμα κάρτας με τις ακριβείς ετικέτες και το κείμενο των Σχημάτων Καρτών, τα επίσημα εικονίδια, τη λίστα τραπεζών IRIS, την οθόνη QR και την οθόνη Google Pay — και στις δύο γλώσσες, με τη διατύπωση του κάθε εγχειριδίου (EL/EN).
+
+Σκόπιμα **δεν** είναι πλήρες αντίγραφο σε δύο σημεία: τα πεδία κάρτας είναι ανενεργά και δεν δέχονται τίποτα, και από πάνω υπάρχει μόνιμο κίτρινο banner. Μια σελίδα που και μοιάζει με τραπεζική και ζητάει αριθμό κάρτας είναι στόχος phishing ανεξάρτητα από το ποιος την ανέβασε. Τα σήματα των τραπεζών IRIS και το Google Pay αποδίδονται ως κείμενο — δεν υπάρχουν στο επίσημο icon pack και δεν σχεδιάζουμε ξένα λογότυπα «περίπου».
 
 Εκκρεμούν **δύο** πράγματα, κανένα από τα οποία δεν είναι κώδικας:
 

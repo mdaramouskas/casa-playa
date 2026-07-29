@@ -124,18 +124,20 @@ export function hasLiveCredentials(cfg: PaycenterConfig): boolean {
  * The URLs Euronet registers against our PosId (§3, §10). Nothing here is sent
  * at runtime — this exists so the values we hand over always match the app.
  *
- * Success and failure point at the same handler on purpose: the outcome is
- * decided from `ResultCode`/`StatusFlag`, never from which URL was hit.
+ * §3 lists success and failure as two separate registrations, so they are two
+ * distinct routes. Neither one is what decides the outcome: that comes from
+ * `ResultCode`/`StatusFlag` plus a verified `HashKey` — see
+ * `lib/paycenter/callback.ts`.
  */
 export function registeredUrls(): Record<string, string> {
   const app = appBaseUrl();
   return {
     website: app,
-    // The page that POSTs the customer to pay.aspx — deliberately not
-    // locale-prefixed so one value covers both languages.
+    // The page that POSTs the customer to pay.aspx. Fixed for every
+    // transaction and both languages — no reference, no locale prefix.
     referrer: `${app}/pay/handoff`,
-    success: `${app}/api/payment/callback`,
-    failure: `${app}/api/payment/callback`,
+    success: `${app}/api/payment/success`,
+    failure: `${app}/api/payment/failure`,
     // "Cancel" lands here; `ParamBackLink` adds `?ref=…` at runtime.
     backlink: `${app}/payment/failure`,
   };

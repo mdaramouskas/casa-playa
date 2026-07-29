@@ -4,17 +4,23 @@ import { appBaseUrl, getPaycenterConfig } from "@/lib/paycenter/config";
 import { localeFromParameters, localePrefix } from "@/lib/paycenter/gateway";
 import { verifyHashKey } from "@/lib/paycenter/hashkey";
 
-// Transaction response from the gateway (Redirection Manual §5). This one URL
-// is registered with Euronet as BOTH the success and the failure URL — the
-// outcome is decided from ResultCode/StatusFlag, never from which URL was hit.
-// The bank delivers it as a browser POST (or GET, if the account is set up that
-// way), so the handler ends by redirecting the customer to a readable page.
+// Transaction response from the gateway (Redirection Manual §5).
 //
-// A booking is marked PAID only here, and only after the HashKey verifies.
+// §3 asks for a Success URL and a Failure URL as two separate registrations, so
+// we register two — /api/payment/success and /api/payment/failure — and both
+// land here. Which URL was hit is NOT what decides the outcome: that comes from
+// ResultCode/StatusFlag and, for an approval, a verified HashKey. Hitting the
+// success URL with a failing body still fails, and vice versa. The `expected`
+// argument is only used to log a disagreement, which would mean the account is
+// misconfigured at Euronet.
+//
+// The bank delivers this as a browser POST (or GET, if the account is set up
+// that way), so the handler ends by redirecting the customer to a readable
+// page. A booking is marked PAID only here.
 
-export const dynamic = "force-dynamic";
+export type ResponseUrlKind = "success" | "failure";
 
-function resultUrl(kind: "success" | "failure", locale: string, ref: string) {
+function resultUrl(kind: ResponseUrlKind, locale: string, ref: string) {
   return `${appBaseUrl()}${localePrefix(locale)}/payment/${kind}?ref=${encodeURIComponent(ref)}`;
 }
 
@@ -26,20 +32,40 @@ function reader(params: Record<string, string>) {
   return (name: string) => lower.get(name.toLowerCase()) ?? "";
 }
 
+/**
+ * The response fields, whichever way the account is configured to deliver them
+ * (§5). The query string is always read: it costs nothing and covers a POST
+ * that carries some of the fields in the URL. A body is read on top of it, so
+ * form fields win over query fields of the same name.
+ *
+ * A body that cannot be parsed is treated as no body rather than as a crash.
+ * The bank never sends one, but this endpoint is reachable without
+ * authentication — it is the one URL the gate has to leave open — so a stray
+ * request must produce a clean 400, not a 500.
+ */
 async function readParams(request: Request): Promise<Record<string, string>> {
   const params: Record<string, string> = {};
-  if (request.method === "GET") {
-    for (const [k, v] of new URL(request.url).searchParams.entries()) {
-      params[k] = v;
-    }
-    return params;
+  for (const [k, v] of new URL(request.url).searchParams.entries()) {
+    params[k] = v;
   }
-  const form = await request.formData();
-  for (const [k, v] of form.entries()) params[k] = String(v);
+  if (request.method === "GET") return params;
+
+  try {
+    const form = await request.formData();
+    for (const [k, v] of form.entries()) params[k] = String(v);
+  } catch {
+    console.warn("[paycenter] response body could not be parsed", {
+      method: request.method,
+      contentType: request.headers.get("content-type"),
+    });
+  }
   return params;
 }
 
-async function handle(request: Request) {
+export async function handlePaymentResponse(
+  request: Request,
+  expected: ResponseUrlKind,
+) {
   const params = await readParams(request);
   const get = reader(params);
   const cfg = getPaycenterConfig();
@@ -65,7 +91,11 @@ async function handle(request: Request) {
   // Already applied — the bank may deliver the same response twice.
   if (payment.processedAt) {
     return NextResponse.redirect(
-      resultUrl(payment.status === "PAID" ? "success" : "failure", locale, reference),
+      resultUrl(
+        payment.status === "PAID" ? "success" : "failure",
+        locale,
+        reference,
+      ),
       303,
     );
   }
@@ -73,6 +103,15 @@ async function handle(request: Request) {
   // §5: ResultCode 0 means the transaction ran; StatusFlag says whether the
   // issuer approved it. Both must hold.
   const approved = get("ResultCode") === "0" && get("StatusFlag") === "Success";
+
+  if (approved !== (expected === "success")) {
+    console.warn("[paycenter] response arrived at the other URL", {
+      reference,
+      url: expected,
+      resultCode: get("ResultCode"),
+      statusFlag: get("StatusFlag"),
+    });
+  }
 
   // §5: the HashKey is only populated for a successful transaction, so it is
   // exactly the case where money is involved that we can — and must — verify.
@@ -148,6 +187,3 @@ async function handle(request: Request) {
     303,
   );
 }
-
-export const POST = handle;
-export const GET = handle;
