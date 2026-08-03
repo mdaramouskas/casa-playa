@@ -13,7 +13,6 @@ import { AcceptedCards } from "@/components/payment-badges";
 
 export async function SiteFooter() {
   const t = await getTranslations("footer");
-  const payments = await getTranslations("payments");
 
   const legal = [
     { href: "/terms", label: t("terms") },
@@ -65,15 +64,6 @@ export async function SiteFooter() {
             <AcceptedCards height={22} />
           </div>
         </div>
-      </div>
-
-      {/* The name on the customer's bank statement. Stated plainly because it
-          differs from the brand they just booked under, and an unrecognised
-          descriptor is the most common reason for a chargeback. */}
-      <div className="border-t border-neutral-200 px-6 py-4">
-        <p className="mx-auto max-w-5xl text-xs text-neutral-500">
-          {payments("statementDescriptor", { name: business.tradeName })}
-        </p>
       </div>
     </footer>
   );
