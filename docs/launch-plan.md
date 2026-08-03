@@ -36,8 +36,14 @@
 - [x] **DMARC** (2026-07-31) — `v=DMARC1; p=none; rua=mailto:bananacasaplaya@gmail.com`.
       Το `rua` είναι αδρανές (το `gmail.com` δεν μπορεί να δημοσιεύσει την εγγραφή
       έγκρισης για αναφορές άλλου domain) αλλά δεν βλάπτει· η πολιτική ισχύει κανονικά.
-- [ ] **Εικονίδια/σήματα καρτών στην αρχική** του `casaplaya.gr` (Visa, Mastercard,
+- [~] **Εικονίδια/σήματα καρτών στην αρχική** του `casaplaya.gr` (Visa, Mastercard,
       Maestro, Visa Secure, Mastercard Identity Check) — απαίτηση §8 του εγχειριδίου.
+      **Απόφαση 03/08/2026: δεν το ζητάμε τώρα.** Η προηγούμενη λύση κρατήσεων
+      (Travelotopos) λειτουργούσε με την ίδια διάταξη και εγκρίθηκε, οπότε πάμε ως
+      έχει και το διορθώνουμε αν το ζητήσει η Euronet. Στο `booking.casaplaya.gr`
+      τα σήματα υπάρχουν ήδη.
+      Αν ζητηθεί, είναι γρήγορο: το επίσημο icon pack είναι ήδη στο
+      `public/payment/` και δίνεται αυτούσιο στη ZanteWize.
 - [ ] **Αργότερα, μόνο μετά από ρητή εντολή:** το BOOK NOW από
       `casaplaya.travelotopos.com/?cids=1` στο `booking.casaplaya.gr`.
 
