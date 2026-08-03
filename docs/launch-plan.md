@@ -151,6 +151,11 @@
 - [ ] Παραλαβή των 5 credentials (test).
 - [ ] `PAYCENTER_MODE=test` + credentials στο Vercel.
 - [ ] Τα 3 **υποχρεωτικά test cases** (§7): APPROVED / DECLINED / RECHARGE ATTEMPT.
+      Ακριβή στοιχεία καρτών: `docs/epay-onboarding.md` §7. Ίδια κάρτα και στα τρία —
+      **ο μήνας λήξης επιλέγει το σενάριο** (01/02/03).
+- [ ] Το **test case 3 δεν παράγεται από το UI**: η εφαρμογή αρνείται εκ κατασκευής να
+      ξαναστείλει ήδη πληρωμένη κράτηση. Θέλει χειροκίνητη αποστολή ticketing request
+      με ήδη χρησιμοποιημένο `MerchantReference`. Χρειάζεται μικρό βοηθητικό script.
 - [x] **Apple Pay — απαντήθηκε, δεν ρωτάμε τίποτα** (2026-07-28, από τον οδηγό
       «ApplePay GooglePay v1.0»). Αφορά αποκλειστικά direct integration: η επιχείρηση
       διασυνδέεται η ίδια με Apple και στέλνει token/CAVV/Eci στο Transaction WS. Με
