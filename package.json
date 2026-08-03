@@ -12,7 +12,8 @@
     "db:push": "prisma db push",
     "db:migrate": "prisma migrate dev",
     "db:studio": "prisma studio",
-    "db:seed": "node prisma/seed.mts"
+    "db:seed": "node prisma/seed.mts",
+    "staff": "node prisma/staff.mts"
   },
   "dependencies": {
     "@prisma/adapter-pg": "^7.9.0",

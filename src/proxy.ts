@@ -11,11 +11,14 @@ export default function proxy(request: NextRequest) {
   const challenge = siteGate(request);
   if (challenge) return challenge;
 
-  // API routes are not localized — handing them to next-intl would rewrite
-  // them under a locale prefix and 404.
-  const response = request.nextUrl.pathname.startsWith("/api")
-    ? NextResponse.next()
-    : withLocale(request);
+  // API routes and the staff panel are not localized — handing them to
+  // next-intl would rewrite them under a locale prefix and 404. The panel is a
+  // Greek-only internal tool; its access control is its own (`lib/staff/`).
+  const { pathname } = request.nextUrl;
+  const response =
+    pathname.startsWith("/api") || pathname.startsWith("/admin")
+      ? NextResponse.next()
+      : withLocale(request);
 
   // Certificate transparency publishes every hostname we get a certificate
   // for, so the domain is discoverable the moment it is added to Vercel. The
