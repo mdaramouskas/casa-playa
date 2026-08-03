@@ -2,7 +2,6 @@ import Image from "next/image";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
 import { SiteBackground } from "@/components/site-background";
-import { PaymentTrustStrip } from "@/components/payment-badges";
 import { listProducts, fromPriceCents } from "@/lib/catalog";
 import { formatPrice } from "@/lib/money";
 
@@ -115,12 +114,6 @@ export default async function HomePage({
         </ul>
       </section>
 
-      {/* Redirection Manual §8: the card marks and the 3-D Secure marks have to
-          be on the home page. Removing this block breaks the live-account
-          acceptance criteria, not just the design. */}
-      <section className="mx-auto max-w-5xl px-6 pb-24">
-        <PaymentTrustStrip />
-      </section>
     </main>
   );
 }

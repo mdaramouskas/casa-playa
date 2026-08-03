@@ -1,7 +1,7 @@
 import { getTranslations } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
 import { addressLine, business } from "@/lib/business";
-import { AcceptedCards } from "@/components/payment-badges";
+import { AcceptedCards, SecureBadges } from "@/components/payment-badges";
 
 // Present on every page, by way of the locale layout.
 //
@@ -60,8 +60,13 @@ export async function SiteFooter() {
             </ul>
           </nav>
 
-          <div className="mt-6 sm:flex sm:justify-end">
-            <AcceptedCards height={22} />
+          {/* §8 wants the card marks AND the 3-D Secure marks on the home
+              page. The footer is on the home page, so keeping both here is
+              what lets them exist in exactly one place instead of being
+              repeated in a panel directly above it. */}
+          <div className="mt-6 space-y-3 sm:flex sm:flex-col sm:items-end">
+            <AcceptedCards height={24} />
+            <SecureBadges height={28} />
           </div>
         </div>
       </div>

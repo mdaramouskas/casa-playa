@@ -102,7 +102,6 @@
   },
   "payments": {
     "acceptedCards": "Accepted cards",
-    "secureNote": "Payments are taken only inside the secure environment of Euronet Merchant Services (epay), with 3-D Secure strong cardholder authentication. We never see or store your card details.",
     "poweredBy": "Secure payments by",
     "statementDescriptor": "On your card statement this charge appears as {name}."
   },

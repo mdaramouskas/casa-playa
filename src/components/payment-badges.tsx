@@ -1,5 +1,4 @@
 import Image from "next/image";
-import { getTranslations } from "next-intl/server";
 import {
   cardBrands,
   secureBrands,
@@ -39,34 +38,6 @@ export function SecureBadges({ height = 34 }: { height?: number }) {
   return <Marks brands={secureBrands()} height={height} />;
 }
 
-/**
- * The block §8 requires on the home page: accepted cards plus the 3-D Secure
- * marks. `epay` and IRIS are optional there, so they are left to the footer.
- */
-export async function PaymentTrustStrip() {
-  const t = await getTranslations("payments");
-
-  return (
-    <section
-      aria-labelledby="payment-trust-heading"
-      className="rounded-2xl border border-neutral-200 bg-white p-6 shadow-sm"
-    >
-      <h2
-        id="payment-trust-heading"
-        className="text-sm font-semibold uppercase tracking-wide text-neutral-500"
-      >
-        {t("acceptedCards")}
-      </h2>
-
-      <div className="mt-4">
-        <AcceptedCards />
-      </div>
-
-      <p className="mt-6 text-sm text-neutral-600">{t("secureNote")}</p>
-
-      <div className="mt-4">
-        <SecureBadges />
-      </div>
-    </section>
-  );
-}
+// Both rows live in the site footer, which is on the home page — that is where
+// §8 is satisfied. They used to be repeated in a panel just above it, which is
+// how the same card icons ended up on screen twice within a few centimetres.
