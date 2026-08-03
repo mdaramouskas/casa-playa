@@ -68,12 +68,13 @@ export function SiteBackground() {
           loop
           playsInline
           preload="auto"
+          // H.264 only. A VP9/WebM cut of this footage came out consistently
+          // LARGER than the MP4, and since the browser takes the first source
+          // it can play, offering it first meant Chrome and Firefox downloading
+          // the heavier file for nothing. MP4 plays everywhere.
+          src={`/video/${file}.mp4`}
           className="absolute inset-0 h-full w-full object-cover"
-        >
-          {/* WebM first where supported, MP4 for everyone else. */}
-          <source src={`/video/${file}.webm`} type="video/webm" />
-          <source src={`/video/${file}.mp4`} type="video/mp4" />
-        </video>
+        />
       )}
 
       {/* Bright midday footage. Without this the white headings sitting
