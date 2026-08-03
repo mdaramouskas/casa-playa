@@ -81,9 +81,14 @@ export function SiteBackground() {
         />
       )}
 
-      {/* Bright midday footage. Without this the white headings sitting
-          directly on it are unreadable, and the white cards have no edge. */}
-      <div className="absolute inset-0 bg-black/45" />
+      {/* Was 45%, for white hero headings sitting straight on bright midday
+          footage. Those headings are gone, and nothing white sits on the video
+          any more — header and footer are solid bands, everything else is on
+          a panel. So the scrim now only has to give the panels an edge, and at
+          25% the footage actually reads through them instead of arriving as
+          grey. Lighter here also means darker text on the panels is easier to
+          read, not harder: the backdrop it competes with is brighter. */}
+      <div className="absolute inset-0 bg-black/25" />
     </div>
   );
 }

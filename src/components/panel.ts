@@ -9,9 +9,14 @@
 /**
  * Cards, lists and forms. Deliberately short of opaque — the footage reading
  * through the panels is what keeps the beach present while you book.
+ *
+ * 55% is about as far as this goes before the small grey type (the VAT line,
+ * the inclusions) stops being comfortable. If it needs to go further, lighten
+ * the scrim in `site-background.tsx` first: a brighter backdrop buys contrast
+ * for the dark text rather than spending it.
  */
 export const PANEL =
-  "rounded-2xl border border-white/50 bg-white/70 shadow-xl backdrop-blur-xs";
+  "rounded-2xl border border-white/50 bg-white/55 shadow-xl backdrop-blur-xs";
 
 /**
  * Pages that are mostly prose (terms, privacy, security). Same shape, but
