@@ -89,8 +89,23 @@ export async function handlePaymentResponse(
     get("Parameters") || payment.parameters || null,
   );
 
-  // Already applied — the bank may deliver the same response twice.
+  // Already applied. Two different things land here: the bank re-delivering the
+  // same response, and a genuine second attempt to charge a reference that is
+  // already settled — test case 3 of §7, which asks the merchant application to
+  // record the attempt. Either way nothing is written; the original outcome
+  // stands and the customer is sent to it.
   if (payment.processedAt) {
+    const resultCode = get("ResultCode");
+    // 1048 is the gateway telling us the reference was already used. A repeat
+    // of the original response carries the original code instead.
+    if (resultCode && resultCode !== "0") {
+      console.warn("[paycenter] recharge attempt on a settled payment", {
+        reference,
+        resultCode,
+        supportReferenceId: get("SupportReferenceID"),
+        settledAs: payment.status,
+      });
+    }
     return NextResponse.redirect(
       resultUrl(
         payment.status === "PAID" ? "success" : "failure",

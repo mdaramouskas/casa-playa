@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { formatPrice } from "@/lib/money";
+import { getPaycenterConfig } from "@/lib/paycenter/config";
 import {
   RESCHEDULE_CUTOFF_DAYS,
   RESCHEDULE_MAX_FORWARD_DAYS,
@@ -141,6 +142,20 @@ export default async function BookingDetailPage({
             </dl>
           )}
         </section>
+
+        {/* Only while the Euronet test transactions are running, and only for a
+            booking that actually has an approved payment — those are the two
+            conditions test case 3 needs. Invisible in mock and in live. */}
+        {getPaycenterConfig().mode === "test" && booking.status === "PAID" && (
+          <p className="mt-6 text-sm">
+            <Link
+              href={`/admin/tools/recharge-attempt?ref=${encodeURIComponent(booking.reference)}`}
+              className="text-sky-800 hover:underline"
+            >
+              Χρήση αυτού του κωδικού για το test case 3 (απόπειρα διπλοχρέωσης) →
+            </Link>
+          </p>
+        )}
 
         <section className="mt-6 rounded-2xl border border-neutral-200 bg-white p-6">
           <h2 className="font-semibold">Αλλαγή ημερομηνίας</h2>
