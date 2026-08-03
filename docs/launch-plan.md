@@ -151,7 +151,14 @@
 - [ ] Παραλαβή των 5 credentials (test).
 - [ ] `PAYCENTER_MODE=test` + credentials στο Vercel.
 - [ ] Τα 3 **υποχρεωτικά test cases** (§7): APPROVED / DECLINED / RECHARGE ATTEMPT.
-- [ ] Ερώτημα **Apple Pay** (το εγχειρίδιο Redirection δεν το αναφέρει πουθενά).
+- [x] **Apple Pay — απαντήθηκε, δεν ρωτάμε τίποτα** (2026-07-28, από τον οδηγό
+      «ApplePay GooglePay v1.0»). Αφορά αποκλειστικά direct integration: η επιχείρηση
+      διασυνδέεται η ίδια με Apple και στέλνει token/CAVV/Eci στο Transaction WS. Με
+      φιλοξενούμενη σελίδα δεν αγγίζουμε ποτέ αυτά τα δεδομένα, οπότε Apple Pay θα
+      σήμαινε εγκατάλειψη του Redirection → PCI scope, δική μας φόρμα κάρτας, δικό
+      μας 3DS. **Δεν το προτείνω.** Το Google Pay δουλεύει αυτόματα.
+- [ ] Προαιρετικό ερώτημα, **δεν μπλοκάρει**: δέχονται εύρος IP ή δεύτερη IP; (Θα
+      χρειαζόταν μόνο αν θέλαμε εφεδρικό proxy.)
 - [ ] Αίτηση **live account**: live URLs + live IP → τα 5 live credentials.
 - [ ] Άρση κλειδώματος (`SITE_GATE_PASSWORD` κενό), `PAYCENTER_MODE=live`.
 - [ ] Εντολή προς ZanteWize για αλλαγή του BOOK NOW.
