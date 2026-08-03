@@ -37,6 +37,32 @@ ffmpeg -ss 5 -i "$SRC" -vframes 1 -vf "$CROP" -q:v 6 \
   public/video/hero-poster.jpg
 ```
 
+### Δεύτερη κοπή, για κινητά
+
+Οι περισσότερες κρατήσεις θα γίνονται από κινητό, οπότε η landscape κοπή **δεν
+αρκεί**: σε κατακόρυφη οθόνη το `object-fit: cover` θα πετούσε περίπου το 40% από
+κάθε πλευρά. Από το **ίδιο** πλάνο κόβεται και ένα κεντρικό παράθυρο 4:5.
+
+```bash
+CROP_M="crop=1440:852:0:853,crop=682:852:379:0,scale=720:-2"   # 4:5, 720×900
+
+ffmpeg -i "$SRC" -vf "$CROP_M" -an \
+  -c:v libx264 -crf 30 -preset slow -pix_fmt yuv420p -movflags +faststart \
+  public/video/hero-portrait.mp4
+
+ffmpeg -i "$SRC" -vf "$CROP_M" -an \
+  -c:v libvpx-vp9 -crf 40 -b:v 0 -row-mt 1 -deadline good -cpu-used 2 \
+  public/video/hero-portrait.webm
+
+ffmpeg -ss 5 -i "$SRC" -vframes 1 -vf "$CROP_M" -q:v 6 \
+  public/video/hero-poster-portrait.jpg
+```
+
+Η επιλογή γίνεται στο `src/components/site-background.tsx` με `matchMedia` στα
+768px, **μετά** την ενυδάτωση — ώστε να κατεβαίνει πάντα ένα μόνο αρχείο, ποτέ και
+τα δύο. Μέχρι τότε φαίνεται το ακίνητο καρέ, που είναι σκέτο CSS background και
+δεν χρειάζεται καθόλου JavaScript.
+
 - `-an` αφαιρεί τον ήχο: το autoplay απαιτεί σίγαση ούτως ή άλλως, και γλιτώνουμε όγκο.
 - `-movflags +faststart` βάζει τα μεταδεδομένα στην αρχή, ώστε να ξεκινά η
   αναπαραγωγή πριν κατέβει όλο το αρχείο.
