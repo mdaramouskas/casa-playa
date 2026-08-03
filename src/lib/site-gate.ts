@@ -85,13 +85,47 @@ export function siteGate(request: NextRequest): NextResponse | null {
     return null;
   }
 
-  return new NextResponse("Authentication required.\n", {
+  return new NextResponse(challengePage(), {
     status: 401,
     headers: {
       "WWW-Authenticate": `Basic realm="${REALM}", charset="UTF-8"`,
-      "Content-Type": "text/plain; charset=utf-8",
+      "Content-Type": "text/html; charset=utf-8",
       "Cache-Control": "no-store",
       "X-Robots-Tag": "noindex, nofollow",
     },
   });
+}
+
+/**
+ * The body behind the 401.
+ *
+ * A normal browser never shows this: it sees `WWW-Authenticate`, puts up its
+ * own password dialog, and the body is discarded. The in-app browsers of
+ * Messenger, Instagram and Facebook do not present that dialog at all — they
+ * render the body instead, so the visitor is left staring at a dead end with no
+ * way to type anything.
+ *
+ * That is not a hypothetical: the link goes out by email to Euronet for the
+ * live-account review, and a reviewer tapping it on a phone can easily land
+ * here. Telling them to open it in a real browser is the difference between a
+ * five-second fix and a reply saying the site is broken.
+ */
+function challengePage(): string {
+  return `<!doctype html>
+<html lang="el"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Casa Playa — απαιτείται κωδικός</title>
+</head>
+<body style="margin:0;padding:2.5rem 1.5rem;background:#F0EAE2;color:#1c1917;font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;line-height:1.6">
+  <main style="max-width:26rem;margin:0 auto">
+    <h1 style="margin:0 0 1rem;font-size:1.25rem">Ο ιστότοπος είναι προσωρινά κλειδωμένος</h1>
+    <p style="margin:0 0 1rem">Οι κρατήσεις ανοίγουν σύντομα. Μέχρι τότε χρειάζεται όνομα χρήστη και κωδικός.</p>
+    <p style="margin:0 0 1.5rem"><strong>Δεν σας ζητήθηκε κωδικός;</strong> Ανοίγετε τον σύνδεσμο μέσα από εφαρμογή (Messenger, Instagram, Facebook), και ο ενσωματωμένος browser της δεν εμφανίζει το σχετικό παράθυρο. Ανοίξτε τον σύνδεσμο στο Safari ή στο Chrome — από το μενού <strong>…</strong> επιλέξτε «Άνοιγμα στο Safari» ή αντιγράψτε τη διεύθυνση.</p>
+    <hr style="border:0;border-top:1px solid #d6cec2;margin:1.5rem 0">
+    <p style="margin:0;font-size:.875rem;color:#57534e" lang="en"><strong>Not asked for a password?</strong> You are opening this inside an app's built-in browser, which never shows the login dialog. Open the link in Safari or Chrome instead.</p>
+  </main>
+</body></html>
+`;
 }
