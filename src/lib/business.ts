@@ -25,13 +25,27 @@ export const business = {
 
   vatNumber: "801773715",
 
-  /** Βασιλικός is a village: the register holds no street or number. */
+  /**
+   * The registered seat, as the register holds it. Βασιλικός is a village, so
+   * there is no street or number. This is the address that goes on the contract
+   * and in the legal line of the footer.
+   */
   address: {
     street: null,
     area: "Βασιλικός",
     postalCode: "29100",
     city: "Ζάκυνθος",
     country: "GR",
+  },
+
+  /**
+   * Where the place actually is, worded as casaplaya.gr words it. Not the same
+   * job as `address`: this one is for a customer working out where to go, so it
+   * names the beach, which the register does not.
+   */
+  venue: {
+    line1: "Παραλία Μπανάνα, Βασιλικός",
+    line2: "29100, Ζάκυνθος",
   },
 
   phones: ["+30 26950 35160", "+30 697 69 57 613"],
@@ -44,6 +58,11 @@ export const business = {
 export function addressLine(): string {
   const { street, area, postalCode, city } = business.address;
   return [street, area, `${postalCode} ${city}`].filter(Boolean).join(", ");
+}
+
+/** The venue address, as lines to render one under the other. */
+export function venueAddressLines(): string[] {
+  return [business.venue.line1, business.venue.line2];
 }
 
 /** "CASA PLAYA ΟΕ · ΑΦΜ 801773715 · Βασιλικός, 29100 Ζάκυνθος" */

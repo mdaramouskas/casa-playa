@@ -135,7 +135,8 @@
     "vatNumber": "VAT no.",
     "terms": "Booking terms",
     "privacy": "Privacy policy",
-    "security": "Payment security"
+    "security": "Payment security",
+    "rights": "© Banana Casa Playa Zakynthos {year}. All rights reserved."
   },
   "legal": {
     "draftNotice": "Draft, pending approval by the business. The text accurately describes how the booking system works, but it has not yet been approved or reviewed by a lawyer."

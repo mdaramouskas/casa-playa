@@ -14,7 +14,6 @@ export default async function HomePage({
 }) {
   const { locale } = await params;
   setRequestLocale(locale);
-  const t = await getTranslations("home");
   const c = await getTranslations("catalog");
   const common = await getTranslations("common");
 
@@ -25,23 +24,9 @@ export default async function HomePage({
       {/* Fixed behind everything on this page — the content scrolls over it. */}
       <SiteBackground />
 
-      <section className="mx-auto max-w-4xl px-6 py-28 text-center text-white">
-        <p className="text-sm uppercase tracking-widest text-white/80">
-          {t("heroSubtitle")}
-        </p>
-        <h1 className="mt-3 text-5xl font-bold tracking-tight drop-shadow">
-          {t("heroTitle")}
-        </h1>
-        <p className="mx-auto mt-5 max-w-xl text-lg text-white/90">
-          {t("heroLead")}
-        </p>
-      </section>
-
-      <section className="mx-auto max-w-5xl px-6 pb-24">
-        <h2 className="mb-8 text-center text-xl font-semibold text-white drop-shadow">
-          {t("chooseType")}
-        </h2>
-
+      {/* No hero copy: the footage says where you are, and the list below says
+          what there is to book. The space is what lets the video be seen. */}
+      <section className="mx-auto max-w-5xl px-6 pb-24 pt-16 sm:pt-28">
         <ul className="divide-y divide-neutral-200 rounded-2xl border border-neutral-200 bg-white shadow-sm">
           {products.map((product) => (
             <li
