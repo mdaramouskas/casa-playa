@@ -5,6 +5,7 @@ import { useTranslations } from "next-intl";
 import dayjs from "dayjs";
 import type { DisplayProduct } from "@/lib/catalog";
 import type { Availability } from "@/lib/availability";
+import { business } from "@/lib/business";
 import { formatPrice } from "@/lib/money";
 import { quoteBooking } from "@/lib/pricing";
 
@@ -36,6 +37,7 @@ export function BookingForm({
   const c = useTranslations("catalog");
   const common = useTranslations("common");
   const policy = useTranslations("policy");
+  const payments = useTranslations("payments");
 
   const firstBookable = useMemo(
     () => dayjs().startOf("day").add(MIN_DAYS_AHEAD, "day"),
@@ -410,6 +412,16 @@ export function BookingForm({
           <input type="checkbox" name="cancellationAccepted" required className="mt-1" />
           <span>{t("acceptCancellation")}</span>
         </label>
+
+        {/* The registered trade name, which is what Euronet prints on the
+            statement — and it is not the name on this page. Saying so here,
+            where the customer is about to pay, is the cheapest chargeback
+            prevention there is. */}
+        {quote.subtotalCents > 0 && (
+          <p className="mt-4 border-t border-neutral-200 pt-3 text-sm text-neutral-600">
+            {payments("statementDescriptor", { name: business.tradeName })}
+          </p>
+        )}
       </section>
 
       {error && (

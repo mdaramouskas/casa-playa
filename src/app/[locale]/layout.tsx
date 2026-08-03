@@ -4,6 +4,7 @@ import { NextIntlClientProvider, hasLocale } from "next-intl";
 import { setRequestLocale } from "next-intl/server";
 import { Manrope } from "next/font/google";
 import { routing } from "@/i18n/routing";
+import { SiteFooter } from "@/components/site-footer";
 import "../globals.css";
 
 // Exposed as --font-manrope, not --font-sans: globals.css declares --font-sans
@@ -44,7 +45,12 @@ export default async function LocaleLayout({
       className={`${manrope.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">
-        <NextIntlClientProvider>{children}</NextIntlClientProvider>
+        <NextIntlClientProvider>
+          {children}
+          {/* Every page: the scheme rules want the merchant identity and the
+              terms reachable from wherever the customer is. */}
+          <SiteFooter />
+        </NextIntlClientProvider>
       </body>
     </html>
   );

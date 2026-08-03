@@ -103,7 +103,8 @@
   "payments": {
     "acceptedCards": "Accepted cards",
     "secureNote": "Payments are taken only inside the secure environment of Euronet Merchant Services (epay), with 3-D Secure strong cardholder authentication. We never see or store your card details.",
-    "poweredBy": "Secure payments by"
+    "poweredBy": "Secure payments by",
+    "statementDescriptor": "On your card statement this charge appears as {name}."
   },
   "security": {
     "title": "Payment security",
@@ -130,5 +131,129 @@
     "successBody": "Your booking is confirmed. Booking reference:",
     "failureTitle": "Payment not completed",
     "failureBody": "Something went wrong with the payment. Please try again."
+  },
+  "footer": {
+    "vatNumber": "VAT no.",
+    "terms": "Booking terms",
+    "privacy": "Privacy policy",
+    "security": "Payment security"
+  },
+  "legal": {
+    "draftNotice": "Draft, pending approval by the business. The text accurately describes how the booking system works, but it has not yet been approved or reviewed by a lawyer."
+  },
+  "terms": {
+    "title": "Booking terms",
+    "lead": "The terms that apply to every booking made through this site. By completing a booking you confirm that you have read and accepted them.",
+    "sections": [
+      {
+        "title": "Who you are contracting with",
+        "body": [
+          "Your booking is made with CASA PLAYA ΟΕ, VAT number 801773715, registered at Vasilikos, Zakynthos, 29100, Greece.",
+          "The business trades as BANANA BEACH CASA PLAYA. That is also the name under which the charge appears on your card statement."
+        ]
+      },
+      {
+        "title": "What you are booking",
+        "body": [
+          "Sun beds and cabanas: the booking covers the whole day. The time you pick is only your arrival time.",
+          "One set seats two people. On sun beds, a third person is accommodated with an extra lounger at half the price of the set. Cabanas do not take a third person.",
+          "Restaurant tables: the time you pick is the actual reservation time, and your table is held for two and a half hours.",
+          "Same-day bookings are not possible. The earliest available date is tomorrow."
+        ]
+      },
+      {
+        "title": "Prices and payment",
+        "body": [
+          "All prices are in euro and include 24% VAT. The amount shown before payment is the final amount charged.",
+          "Payment is by card through the epay eCommerce service of Euronet Merchant Services. Your card details are entered only on the bank's page; they never pass through our servers and we do not store them.",
+          "A booking becomes final only once we receive confirmation of payment from the bank. Until then it stays pending and does not hold a place."
+        ]
+      },
+      {
+        "title": "Cancellation and no-show",
+        "body": [
+          "Bookings are non-refundable. In case of cancellation, no-show, or arrival later than 12:00, the full amount is charged.",
+          "If your plans change, see the next section: moving the date is usually better than cancelling."
+        ]
+      },
+      {
+        "title": "Changing the date",
+        "body": [
+          "You may request a change of date up to two days before the date of your booking. The new date can be at most two days after the original one.",
+          "The price stays locked to the original amount: there is no additional charge and no refund, even if the price for the new day differs.",
+          "Requests are made by phone or email, quoting your booking reference. A change depends on availability on the new date."
+        ]
+      },
+      {
+        "title": "Receipts",
+        "body": [
+          "The confirmation email you receive is proof of your booking, not a tax document. The receipt or invoice is issued by the business on site. If you need an invoice, please tell us when you arrive."
+        ]
+      },
+      {
+        "title": "Contact, complaints and governing law",
+        "body": [
+          "For anything concerning your booking, contact us at bananacasaplaya@gmail.com or +30 26950 35160, quoting your booking reference.",
+          "These terms are governed by Greek law. As a consumer you keep every right the law gives you, including out-of-court dispute resolution through the European ODR platform."
+        ]
+      }
+    ]
+  },
+  "privacy": {
+    "title": "Privacy policy",
+    "lead": "How we use the personal data you give us when you book, under the General Data Protection Regulation.",
+    "sections": [
+      {
+        "title": "Data controller",
+        "body": [
+          "CASA PLAYA ΟΕ, VAT number 801773715, Vasilikos, 29100 Zakynthos, Greece. For data protection matters: bananacasaplaya@gmail.com, +30 26950 35160."
+        ]
+      },
+      {
+        "title": "What we collect",
+        "body": [
+          "What you enter in the booking form: first name, last name, email, phone and any comments you add.",
+          "The booking itself: product, date, time, number of people, amount and payment status.",
+          "We never collect or see card details. The number, expiry date and security code are entered only on the bank's page. From the payment we keep only the transaction reference codes and the card type."
+        ]
+      },
+      {
+        "title": "Why we process it",
+        "body": [
+          "To carry out your booking and to contact you about it. The legal basis is performance of a contract, Article 6(1)(b) of the Regulation.",
+          "To keep transactions secure and deal with fraud, on the basis of our legitimate interest.",
+          "To meet tax and accounting obligations where the law requires it.",
+          "We do not send you marketing messages and we do not sell your data to anyone."
+        ]
+      },
+      {
+        "title": "Who else sees it",
+        "body": [
+          "Euronet Merchant Services, in order to process the card payment.",
+          "The providers hosting the website, the database and the email service, acting solely on our behalf under a data processing agreement.",
+          "Our infrastructure is located within the European Union."
+        ]
+      },
+      {
+        "title": "How long we keep it",
+        "body": [
+          "Booking data is kept for as long as needed to carry out the booking and to document the transaction in case of a dispute. Data tied to tax obligations is kept for the period the law requires."
+        ]
+      },
+      {
+        "title": "Cookies",
+        "body": [
+          "We use only the cookies strictly necessary for booking to work: one for the language you chose and a temporary one that carries your booking reference to the payment page.",
+          "We use no tracking, analytics or advertising cookies."
+        ]
+      },
+      {
+        "title": "Your rights",
+        "body": [
+          "You have the right to access your data, and to have it corrected, erased, restricted, ported, or to object to its processing. Write to the contact address above.",
+          "If you believe your data is being processed unlawfully, you may complain to the Hellenic Data Protection Authority, www.dpa.gr."
+        ]
+      }
+    ]
   }
 }

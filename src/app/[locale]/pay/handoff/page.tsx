@@ -2,6 +2,7 @@ import { cookies } from "next/headers";
 import { notFound, redirect } from "next/navigation";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { prisma } from "@/lib/prisma";
+import { business } from "@/lib/business";
 import {
   PAY_REF_COOKIE,
   localeFromParameters,
@@ -35,6 +36,7 @@ export default async function PaymentHandoffPage({
   const { locale } = await params;
   setRequestLocale(locale);
   const t = await getTranslations("payHandoff");
+  const payments = await getTranslations("payments");
 
   const jar = await cookies();
   const reference = jar.get(PAY_REF_COOKIE)?.value ?? (await searchParams).ref;
@@ -59,6 +61,11 @@ export default async function PaymentHandoffPage({
     <main className="mx-auto w-full max-w-sm flex-1 px-6 py-20 text-center">
       <h1 className="text-lg font-semibold">{t("title")}</h1>
       <p className="mt-2 text-sm text-neutral-600">{t("body")}</p>
+      {/* Last screen before the bank's page: name the merchant as it will
+          appear on the statement, so the charge is never a surprise. */}
+      <p className="mt-4 text-xs text-neutral-500">
+        {payments("statementDescriptor", { name: business.tradeName })}
+      </p>
       <div className="mt-8">
         <AutoSubmitForm
           action={payFormAction()}
