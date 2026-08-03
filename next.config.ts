@@ -4,6 +4,11 @@ import createNextIntlPlugin from "next-intl/plugin";
 const withNextIntl = createNextIntlPlugin("./src/i18n/request.ts");
 
 const nextConfig: NextConfig = {
+  // `undici` reaches for `net`/`tls` and is only ever used on the server, in
+  // `lib/paycenter/egress.ts`. Left to `require`, as the bundler has nothing
+  // useful to do with it.
+  serverExternalPackages: ["undici"],
+
   async headers() {
     return [
       {

@@ -8,6 +8,7 @@ import {
   requestType,
   type PaycenterConfig,
 } from "./config";
+import { paycenterFetch } from "./egress";
 
 // Step 1 of the Redirection flow (Manual §4): before the customer can pay, the
 // transaction is declared to the gateway over SOAP and we get back a
@@ -256,7 +257,9 @@ export async function issueTicket(params: {
   const fields = buildTicketRequestFields(cfg, { ...params, parameters });
   const envelope = buildSoapEnvelope(cfg, fields);
 
-  const response = await fetch(cfg.issueTicketUrl, {
+  // Through our fixed-IP proxy — see `egress.ts`. This is the only outbound
+  // call in the app that Euronet checks the source address of.
+  const response = await paycenterFetch(cfg.issueTicketUrl, {
     method: "POST",
     headers: {
       "Content-Type": "text/xml; charset=utf-8",
