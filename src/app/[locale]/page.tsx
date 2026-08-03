@@ -1,5 +1,7 @@
+import Image from "next/image";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
+import { HeroVideo } from "@/components/hero-video";
 import { PaymentTrustStrip } from "@/components/payment-badges";
 import { listProducts, fromPriceCents } from "@/lib/catalog";
 import { formatPrice } from "@/lib/money";
@@ -21,17 +23,19 @@ export default async function HomePage({
 
   return (
     <main className="flex-1">
-      <section className="mx-auto max-w-4xl px-6 py-20 text-center">
-        <p className="text-sm uppercase tracking-widest text-sky-700">
-          {t("heroSubtitle")}
-        </p>
-        <h1 className="mt-3 text-5xl font-bold tracking-tight">
-          {t("heroTitle")}
-        </h1>
-        <p className="mx-auto mt-5 max-w-xl text-lg text-neutral-600">
-          {t("heroLead")}
-        </p>
-      </section>
+      <HeroVideo>
+        <div className="mx-auto max-w-4xl px-6 py-28 text-center text-white">
+          <p className="text-sm uppercase tracking-widest text-white/80">
+            {t("heroSubtitle")}
+          </p>
+          <h1 className="mt-3 text-5xl font-bold tracking-tight drop-shadow">
+            {t("heroTitle")}
+          </h1>
+          <p className="mx-auto mt-5 max-w-xl text-lg text-white/90">
+            {t("heroLead")}
+          </p>
+        </div>
+      </HeroVideo>
 
       <section className="mx-auto max-w-5xl px-6 pb-24">
         <h2 className="mb-8 text-center text-xl font-semibold">
@@ -44,7 +48,17 @@ export default async function HomePage({
               key={product.slug}
               className="flex flex-col gap-5 p-6 sm:flex-row sm:items-start"
             >
-              <div className="h-32 w-full shrink-0 rounded-xl bg-neutral-100 sm:w-48" />
+              {product.imageUrl ? (
+                <Image
+                  src={product.imageUrl}
+                  alt={product.name}
+                  width={384}
+                  height={256}
+                  className="h-32 w-full shrink-0 rounded-xl object-cover sm:w-48"
+                />
+              ) : (
+                <div className="h-32 w-full shrink-0 rounded-xl bg-neutral-100 sm:w-48" />
+              )}
 
               <div className="flex-1">
                 <h3 className="text-xl font-semibold text-sky-800">
