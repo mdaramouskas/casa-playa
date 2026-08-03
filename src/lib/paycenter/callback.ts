@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { appBaseUrl, getPaycenterConfig } from "@/lib/paycenter/config";
 import { localeFromParameters, localePrefix } from "@/lib/paycenter/gateway";
 import { verifyHashKey } from "@/lib/paycenter/hashkey";
+import { sendBookingConfirmation } from "@/lib/email/booking-confirmation";
 
 // Transaction response from the gateway (Redirection Manual §5).
 //
@@ -171,6 +172,13 @@ export async function handlePaymentResponse(
       data: { status: approved ? "PAID" : "FAILED" },
     }),
   ]);
+
+  // The customer's proof of booking. Deliberately after the transaction and
+  // deliberately unable to fail the request: the money has moved, and a bad
+  // minute at the email provider must not leave a paid booking looking failed.
+  if (approved) {
+    await sendBookingConfirmation(booking.id, locale);
+  }
 
   if (!approved) {
     // §9: never show ResultDescription/ResponseDescription to the customer.

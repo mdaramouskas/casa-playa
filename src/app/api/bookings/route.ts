@@ -13,6 +13,7 @@ import {
   localePrefix,
 } from "@/lib/paycenter/gateway";
 import { getPaycenterConfig } from "@/lib/paycenter/config";
+import { sendBookingConfirmation } from "@/lib/email/booking-confirmation";
 
 // Creates a PENDING booking, then hands the customer to the payment gateway.
 // Prices, unit counts and availability are always recomputed here — nothing
@@ -182,6 +183,9 @@ export async function POST(request: Request) {
   });
 
   if (!needsPayment) {
+    // Free products (the Restaurant Area) never reach the gateway, so this is
+    // the only place their confirmation can be sent from.
+    await sendBookingConfirmation(booking.id, input.locale);
     return NextResponse.json({
       reference,
       redirectUrl: `${localePrefix(input.locale)}/payment/success?ref=${reference}`,
