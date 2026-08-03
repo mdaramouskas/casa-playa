@@ -4,6 +4,7 @@ import { NextIntlClientProvider, hasLocale } from "next-intl";
 import { setRequestLocale } from "next-intl/server";
 import { Manrope } from "next/font/google";
 import { routing } from "@/i18n/routing";
+import { SiteHeader } from "@/components/site-header";
 import { SiteFooter } from "@/components/site-footer";
 import "../globals.css";
 
@@ -46,6 +47,7 @@ export default async function LocaleLayout({
     >
       <body className="min-h-full flex flex-col">
         <NextIntlClientProvider>
+          <SiteHeader />
           {children}
           {/* Every page: the scheme rules want the merchant identity and the
               terms reachable from wherever the customer is. */}
