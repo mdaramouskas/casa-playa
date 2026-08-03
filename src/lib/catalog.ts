@@ -66,7 +66,9 @@ function fromStatic(locale: string): DisplayProduct[] {
 }
 
 export async function listProducts(locale: string): Promise<DisplayProduct[]> {
-  const en = locale === "en";
+  // Greek for Greek, English for every other language — same two-language
+  // catalog and the same reasoning as `localizeProduct`.
+  const en = locale !== "el";
   try {
     const rows = await prisma.product.findMany({
       where: { active: true },

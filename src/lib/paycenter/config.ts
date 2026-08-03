@@ -104,9 +104,18 @@ export function passwordHash(cfg: PaycenterConfig): string {
   return createHash("md5").update(cfg.password, "utf8").digest("hex");
 }
 
-/** Payment-page language (§5, `LanguageCode`). Only el/en are used here. */
+/**
+ * Payment-page language (§5, `LanguageCode`).
+ *
+ * The site speaks seven languages; the bank's page is only asked for two. The
+ * manual documents el-GR and en-US, and sending an undocumented tag to a
+ * gateway that has to render the page is how you get a blank page instead of a
+ * German one — so every non-Greek locale asks for English. If Euronet confirms
+ * de-DE/fr-FR/it-IT/ru-RU/es-ES are supported, widen this one function and the
+ * rest of the flow needs no change.
+ */
 export function languageCode(locale: string): string {
-  return locale === "en" ? "en-US" : "el-GR";
+  return locale === "el" ? "el-GR" : "en-US";
 }
 
 /** Whether real bank credentials are present (false => must stay in mock). */

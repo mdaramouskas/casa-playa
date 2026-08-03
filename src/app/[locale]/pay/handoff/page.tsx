@@ -10,6 +10,7 @@ import {
   payFormAction,
   payFormFields,
 } from "@/lib/paycenter/gateway";
+import { PANEL } from "@/components/panel";
 import { AutoSubmitForm } from "./auto-submit-form";
 
 // Hands the customer over to the bank's hosted payment page (Redirection §5).
@@ -35,8 +36,6 @@ export default async function PaymentHandoffPage({
 }) {
   const { locale } = await params;
   setRequestLocale(locale);
-  const t = await getTranslations("payHandoff");
-  const payments = await getTranslations("payments");
 
   const jar = await cookies();
   const reference = jar.get(PAY_REF_COOKIE)?.value ?? (await searchParams).ref;
@@ -49,34 +48,57 @@ export default async function PaymentHandoffPage({
   const payment = booking?.payment;
   if (!booking || !payment) notFound();
 
-  // Already settled — nothing left to pay.
-  if (payment.processedAt) {
-    const done = payment.status === "PAID" ? "success" : "failure";
-    redirect(`${localePrefix(locale)}/payment/${done}?ref=${reference}`);
-  }
-
   const customerLocale = localeFromParameters(payment.parameters);
 
+  // Already settled — nothing left to pay. Sent to the customer's own language,
+  // not the one this URL happens to render in.
+  if (payment.processedAt) {
+    const done = payment.status === "PAID" ? "success" : "failure";
+    redirect(`${localePrefix(customerLocale)}/payment/${done}?ref=${reference}`);
+  }
+
+  // Translated with an explicit locale rather than the route's.
+  //
+  // This path is registered with Euronet as the Referrer URL, so it carries no
+  // locale prefix and therefore always renders as the default locale — a
+  // Spanish customer would read Greek on the last screen before the bank.
+  // Moving the URL is not an option; the registration is what it is. But the
+  // customer's language rode along in the gateway's `Parameters`, so the page
+  // can simply ask for it.
+  const t = await getTranslations({ locale: customerLocale, namespace: "payHandoff" });
+  const payments = await getTranslations({
+    locale: customerLocale,
+    namespace: "payments",
+  });
+
   return (
-    <main className="mx-auto w-full max-w-sm flex-1 px-6 py-20 text-center">
-      <h1 className="text-lg font-semibold">{t("title")}</h1>
-      <p className="mt-2 text-sm text-neutral-600">{t("body")}</p>
-      {/* Last screen before the bank's page: name the merchant as it will
-          appear on the statement, so the charge is never a surprise. */}
-      <p className="mt-4 text-xs text-neutral-500">
-        {payments("statementDescriptor", { name: business.tradeName })}
-      </p>
-      <div className="mt-8">
-        <AutoSubmitForm
-          action={payFormAction()}
-          fields={payFormFields({
-            reference,
-            locale: customerLocale,
-            // Lands the "Cancel" button back on our failure page with context.
-            paramBackLink: `ref=${encodeURIComponent(reference)}`,
-          })}
-          label={t("continue")}
-        />
+    // `lang` overrides the <html lang> the layout set from the route, which for
+    // this unprefixed URL is always the default locale. Without it a screen
+    // reader would read Spanish copy with Greek pronunciation rules.
+    <main
+      lang={customerLocale}
+      className="mx-auto w-full max-w-sm flex-1 px-6 py-20 text-center"
+    >
+      <div className={`${PANEL} p-6`}>
+        <h1 className="text-lg font-semibold">{t("title")}</h1>
+        <p className="mt-2 text-sm text-neutral-600">{t("body")}</p>
+        {/* Last screen before the bank's page: name the merchant as it will
+            appear on the statement, so the charge is never a surprise. */}
+        <p className="mt-4 text-xs text-neutral-500">
+          {payments("statementDescriptor", { name: business.tradeName })}
+        </p>
+        <div className="mt-8">
+          <AutoSubmitForm
+            action={payFormAction()}
+            fields={payFormFields({
+              reference,
+              locale: customerLocale,
+              // Lands the "Cancel" button back on our failure page with context.
+              paramBackLink: `ref=${encodeURIComponent(reference)}`,
+            })}
+            label={t("continue")}
+          />
+        </div>
       </div>
     </main>
   );

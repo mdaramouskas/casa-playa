@@ -1,4 +1,6 @@
 import { randomBytes } from "crypto";
+import { hasLocale } from "next-intl";
+import { routing, type Locale } from "@/i18n/routing";
 import {
   appBaseUrl,
   getPaycenterConfig,
@@ -35,7 +37,7 @@ export interface IssuedTicket {
 }
 
 export function localePrefix(locale: string): string {
-  return locale === "en" ? "/en" : "";
+  return locale === routing.defaultLocale ? "" : `/${locale}`;
 }
 
 /**
@@ -44,11 +46,17 @@ export function localePrefix(locale: string): string {
  * of the response does not include `LanguageCode`.
  */
 export function encodeParameters(locale: string): string {
-  return `locale=${locale === "en" ? "en" : "el"}`;
+  const known = hasLocale(routing.locales, locale) ? locale : routing.defaultLocale;
+  return `locale=${known}`;
 }
 
-export function localeFromParameters(parameters: string | null): "el" | "en" {
-  return parameters?.includes("locale=en") ? "en" : "el";
+export function localeFromParameters(parameters: string | null): Locale {
+  // Read back with a word boundary: a bare `includes("locale=el")` would also
+  // match a hypothetical `locale=el-CY`, and the tags are two letters precisely
+  // so this stays a lookup rather than a parse.
+  const match = parameters?.match(/(?:^|&)locale=([a-z]{2})(?:&|$)/);
+  const candidate = match?.[1];
+  return hasLocale(routing.locales, candidate) ? candidate : routing.defaultLocale;
 }
 
 /**

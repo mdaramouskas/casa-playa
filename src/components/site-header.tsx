@@ -1,6 +1,7 @@
 import Image from "next/image";
 import { getTranslations } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
+import { LanguageSwitcher } from "@/components/language-switcher";
 
 // The logo and the cream band are taken from the existing booking engine at
 // casaplaya.travelotopos.com, so a customer arriving from casaplaya.gr lands on
@@ -32,6 +33,12 @@ export async function SiteHeader() {
             className="h-14 w-auto"
           />
         </Link>
+
+        {/* Where the legacy engine puts it, and where a visitor who cannot read
+            the page will look first. */}
+        <div className="ml-auto">
+          <LanguageSwitcher />
+        </div>
       </div>
     </header>
   );

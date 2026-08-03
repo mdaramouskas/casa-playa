@@ -2,9 +2,13 @@
 
 import { useSyncExternalStore } from "react";
 
-// The beach playing behind the whole home page, not just a band at the top.
-// The content floats over it: the product list and the card strip are opaque
-// cards, so the video reads through the gutters and the gaps between them.
+// The beach playing behind every page of the site, not just a band at the top
+// of the home page. Rendered once from the locale layout; the content floats
+// over it on the translucent panels in `panel.ts`, so the video reads through
+// the gutters and, faintly, through the panels themselves.
+//
+// The one page that covers it deliberately is the mock payment page, which is a
+// replica of the bank's own and must never be mistaken for ours.
 //
 // Most bookings will come from a phone, so the phone is not the afterthought.
 // The same shot is cut twice — a landscape crop for wide screens and a 4:5 crop

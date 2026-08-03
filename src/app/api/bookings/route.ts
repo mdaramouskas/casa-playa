@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import dayjs from "dayjs";
+import { routing } from "@/i18n/routing";
 import { prisma } from "@/lib/prisma";
 import { generateBookingReference } from "@/lib/reference";
 import { applyDiscount } from "@/lib/money";
@@ -37,7 +38,9 @@ const bodySchema = z.object({
   comments: z.string().trim().max(1000).optional(),
   couponCode: z.string().trim().max(40).optional(),
   cancellationAccepted: z.literal(true),
-  locale: z.enum(["el", "en"]).default("el"),
+  // Driven off the routing config: a locale added there and forgotten here
+  // would fail every booking made in that language at the validation step.
+  locale: z.enum(routing.locales).default(routing.defaultLocale),
 });
 
 function fail(error: string, status = 400) {

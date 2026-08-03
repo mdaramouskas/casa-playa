@@ -1,0 +1,263 @@
+{
+  "meta": {
+    "title": "Casa Playa — Prenotazioni",
+    "description": "Prenota online lettini, cabanas e tavoli del ristorante al Casa Playa, Zante."
+  },
+  "common": {
+    "brand": "Casa Playa",
+    "book": "Prenota",
+    "loading": "Caricamento…",
+    "vatIncluded": "IVA 24% inclusa",
+    "perSet": "a set",
+    "perPerson": "persona",
+    "persons": "{count, plural, one {persona} other {persone}}",
+    "total": "Totale"
+  },
+  "nav": {
+    "home": "Home",
+    "loungers": "Lettini",
+    "cabanas": "Cabanas",
+    "restaurant": "Ristorante",
+    "myBooking": "La mia prenotazione"
+  },
+  "home": {
+    "heroTitle": "Casa Playa",
+    "heroSubtitle": "Beach bar & ristorante, Zante",
+    "heroLead": "Prenota online lettini, cabanas e un tavolo al ristorante — subito e in sicurezza.",
+    "chooseType": "Scegli cosa vuoi prenotare"
+  },
+  "catalog": {
+    "includedInPrice": "Incluso nel prezzo:",
+    "vatNote": "Tutti i prezzi includono l'IVA al 24% e le tasse locali.",
+    "more": "Scopri di più",
+    "from": "Da:",
+    "availableTimes": "Orari disponibili",
+    "noPrepayment": "Senza prepagamento",
+    "bookingSoon": "La prenotazione online sarà attiva a breve."
+  },
+  "booking": {
+    "selectDate": "Scegli una data",
+    "quantity": "Quantità",
+    "persons": "Persone",
+    "timeSlot": "Orario",
+    "couponCode": "Codice sconto",
+    "couponOptional": "facoltativo",
+    "firstName": "Nome",
+    "lastName": "Cognome",
+    "email": "Email",
+    "phone": "Telefono",
+    "comments": "Note",
+    "acceptCancellation": "Accetto la politica di cancellazione",
+    "proceedToPayment": "Procedi al pagamento",
+    "reference": "Codice prenotazione",
+    "selectDateAndTimeFirst": "Scegli prima data, orario e numero di persone.",
+    "confirmBooking": "Conferma la prenotazione",
+    "sets": "set",
+    "extraLounger": "lettino extra",
+    "setsLeft": "Restano {count} set per la giornata.",
+    "left": "{count} disponibili",
+    "soldOut": "Esaurito",
+    "tableHeldFor": "Ogni prenotazione tiene il tavolo per {hours} ore.",
+    "errors": {
+      "generic": "Qualcosa è andato storto. Riprova.",
+      "soldOut": "Nessuna disponibilità per l'orario scelto.",
+      "invalidDate": "Data non valida.",
+      "invalidCoupon": "Questo codice sconto non è valido.",
+      "tooManyPersons": "Fino a {max} persone per prenotazione. Per gruppi più numerosi contattaci."
+    }
+  },
+  "mockPay": {
+    "banner": "PAGINA DI PROVA — una replica della pagina di pagamento Euronet. Non accetta dati della carta e non viene addebitato nulla.",
+    "mode": "Paycenter mode: {mode} · {type} · {reference}",
+    "simulateDecline": "Simula un rifiuto",
+    "footnote": "Quando Euronet fornirà AcquirerId/MerchantId/PosId/Username/Password, la pay.aspx di Paycenter sostituirà questa pagina — il resto del flusso (ticketing, verifica dell'HashKey) resta invariato."
+  },
+  "epayPage": {
+    "cardPayment": "Pagamento con carta",
+    "irisPayment": "Pagamento IRIS",
+    "googlePayPayment": "Pagamento con Google Pay",
+    "merchant": "Esercente",
+    "transactionAmount": "Importo della transazione",
+    "choosePaymentMethod": "Scegli il metodo di pagamento",
+    "methodCard": "Carta",
+    "methodIris": "IRIS",
+    "methodGooglePay": "Google Pay",
+    "cardNumber": "Numero della carta",
+    "expiryAndCvv": "Data di scadenza e CVV",
+    "expiryPlaceholder": "MM / AAAA",
+    "cvv": "CVV",
+    "cardholderName": "Nome del titolare della carta",
+    "cardholderNameHint": "(come appare sulla tua carta)",
+    "email": "Email",
+    "requiredFields": "* Campi obbligatori",
+    "disclaimer": "L'inserimento del nome e dell'email aumenta la sicurezza delle transazioni secondo le linee guida dei circuiti (ad es. Visa, Mastercard). Queste informazioni saranno trasmesse alla banca che ha emesso la tua carta. Per maggiori dettagli consulta <privacy>l'informativa sulla privacy</privacy> di epay.",
+    "cancel": "Annulla",
+    "pay": "Paga {amount}",
+    "continue": "Continua",
+    "bankOption": "Collegati alla tua banca",
+    "bankOptionHint": "paga tramite e-banking",
+    "qrOption": "Scansiona il QR code",
+    "qrOptionHint": "con l'app della tua banca",
+    "bankSelectLead": "Seleziona la tua banca e sarai reindirizzato automaticamente all'ambiente e-banking sicuro della tua banca per completare il pagamento. Una volta completato il pagamento, tornerai automaticamente al sito dell'esercente.",
+    "qrTitle": "Pagamento IRIS con QR code",
+    "qrLead": "Apri l'app di mobile banking della tua banca, scansiona il QR code qui sotto e completa il pagamento. Una volta completato il pagamento, tornerai automaticamente al sito dell'esercente.",
+    "qrPlaceholder": "Il QR code viene generato da IRIS al momento del pagamento.",
+    "googlePayButton": "Paga con"
+  },
+  "payments": {
+    "acceptedCards": "Carte accettate",
+    "poweredBy": "Pagamenti sicuri tramite",
+    "statementDescriptor": "Sull'estratto conto della carta l'addebito appare come {name}."
+  },
+  "security": {
+    "title": "Sicurezza dei pagamenti",
+    "lead": "I pagamenti online di Casa Playa passano attraverso il servizio epay eCommerce (Redirection) di Euronet Merchant Services.",
+    "cardsTitle": "Carte accettate",
+    "threeDsTitle": "Autenticazione forte del titolare",
+    "threeDsBody": "Ogni transazione è protetta da Visa Secure e Mastercard Identity Check. La banca che ha emesso la tua carta può chiederti una conferma aggiuntiva prima che il pagamento venga completato.",
+    "dataTitle": "I dati della tua carta",
+    "dataBody": "I dati della carta si inseriscono esclusivamente sulla pagina di pagamento di Euronet Merchant Services, su connessione cifrata. Non passano mai dai nostri server, non vengono conservati e non sono mai visibili a noi.",
+    "confirmTitle": "Conferma del pagamento",
+    "confirmBody": "La risposta della banca viene verificata crittograficamente (HashKey) prima che una prenotazione risulti pagata, così non può essere falsificata."
+  },
+  "payHandoff": {
+    "title": "Passaggio al pagamento sicuro",
+    "body": "Ti stiamo portando alla pagina di pagamento della banca. Non chiudere questa finestra.",
+    "continue": "Continua al pagamento"
+  },
+  "policy": {
+    "cancellationTitle": "Politica di cancellazione",
+    "nonRefundable": "Prenotazione non rimborsabile. In caso di cancellazione, mancata presentazione o arrivo in ritardo (dopo le 12:00) si applica un addebito del 100%."
+  },
+  "payment": {
+    "successTitle": "Pagamento completato",
+    "successBody": "La tua prenotazione è confermata. Codice prenotazione:",
+    "failureTitle": "Pagamento non completato",
+    "failureBody": "Qualcosa è andato storto con il pagamento. Riprova."
+  },
+  "footer": {
+    "vatNumber": "P. IVA",
+    "terms": "Condizioni di prenotazione",
+    "privacy": "Informativa sulla privacy",
+    "security": "Sicurezza dei pagamenti",
+    "rights": "© Banana Casa Playa Zante {year}. Tutti i diritti riservati."
+  },
+  "legal": {
+    "draftNotice": "Bozza, in attesa di approvazione da parte dell'attività. Il testo descrive fedelmente il funzionamento del sistema di prenotazione, ma non è ancora stato approvato né rivisto da un legale."
+  },
+  "terms": {
+    "title": "Condizioni di prenotazione",
+    "lead": "Le condizioni che valgono per ogni prenotazione effettuata tramite questo sito. Completando una prenotazione confermi di averle lette e accettate.",
+    "sections": [
+      {
+        "title": "Con chi stai contrattando",
+        "body": [
+          "La prenotazione è conclusa con CASA PLAYA ΟΕ, partita IVA 801773715, con sede a Vasilikos, Zante, 29100, Grecia.",
+          "L'attività opera con l'insegna BANANA BEACH CASA PLAYA. È anche il nome con cui l'addebito compare sull'estratto conto della carta."
+        ]
+      },
+      {
+        "title": "Che cosa stai prenotando",
+        "body": [
+          "Lettini e cabanas: la prenotazione vale per l'intera giornata. L'orario che scegli è soltanto il tuo orario di arrivo.",
+          "Un set ospita due persone. Sui lettini, una terza persona viene sistemata con un lettino aggiuntivo a metà del prezzo del set. Le cabanas non ospitano una terza persona.",
+          "Tavoli del ristorante: l'orario che scegli è l'orario effettivo della prenotazione e il tavolo resta riservato per due ore e mezza.",
+          "Non si accettano prenotazioni per lo stesso giorno. La prima data disponibile è domani."
+        ]
+      },
+      {
+        "title": "Prezzi e pagamento",
+        "body": [
+          "Tutti i prezzi sono in euro e includono l'IVA al 24%. L'importo mostrato prima del pagamento è l'importo finale addebitato.",
+          "Il pagamento avviene con carta, tramite il servizio epay eCommerce di Euronet Merchant Services. I dati della carta si inseriscono esclusivamente sulla pagina della banca; non passano mai dai nostri server e non vengono conservati da noi.",
+          "Una prenotazione diventa definitiva solo quando riceviamo la conferma del pagamento dalla banca. Fino ad allora resta in sospeso e non blocca un posto."
+        ]
+      },
+      {
+        "title": "Cancellazione e mancata presentazione",
+        "body": [
+          "Le prenotazioni non sono rimborsabili. In caso di cancellazione, mancata presentazione o arrivo dopo le 12:00 viene addebitato l'intero importo.",
+          "Se i tuoi programmi cambiano, vedi la sezione successiva: spostare la data di solito è meglio che cancellare."
+        ]
+      },
+      {
+        "title": "Cambio della data",
+        "body": [
+          "Puoi chiedere un cambio di data fino a due giorni prima della data della prenotazione. La nuova data può essere al massimo due giorni dopo quella originaria.",
+          "Il prezzo resta bloccato all'importo originario: nessun addebito aggiuntivo e nessun rimborso, anche se il prezzo del nuovo giorno è diverso.",
+          "Le richieste si fanno per telefono o via email, indicando il codice della prenotazione. Il cambio dipende dalla disponibilità nella nuova data."
+        ]
+      },
+      {
+        "title": "Ricevute",
+        "body": [
+          "L'email di conferma che ricevi è la prova della prenotazione, non un documento fiscale. La ricevuta o la fattura viene emessa dall'attività sul posto. Se ti serve una fattura, dillo al momento dell'arrivo."
+        ]
+      },
+      {
+        "title": "Contatti, reclami e legge applicabile",
+        "body": [
+          "Per qualsiasi cosa riguardi la tua prenotazione, scrivici a bananacasaplaya@gmail.com o chiama +30 26950 35160, indicando il codice della prenotazione.",
+          "Queste condizioni sono regolate dalla legge greca. Come consumatore mantieni tutti i diritti che la legge ti riconosce, compresa la risoluzione stragiudiziale delle controversie tramite la piattaforma europea ODR."
+        ]
+      }
+    ]
+  },
+  "privacy": {
+    "title": "Informativa sulla privacy",
+    "lead": "Come usiamo i dati personali che ci fornisci quando prenoti, ai sensi del Regolamento generale sulla protezione dei dati.",
+    "sections": [
+      {
+        "title": "Titolare del trattamento",
+        "body": [
+          "CASA PLAYA ΟΕ, partita IVA 801773715, Vasilikos, 29100 Zante, Grecia. Per questioni di protezione dei dati: bananacasaplaya@gmail.com, +30 26950 35160."
+        ]
+      },
+      {
+        "title": "Quali dati raccogliamo",
+        "body": [
+          "Quello che inserisci nel modulo di prenotazione: nome, cognome, email, telefono ed eventuali note.",
+          "La prenotazione stessa: prodotto, data, orario, numero di persone, importo e stato del pagamento.",
+          "Non raccogliamo e non vediamo mai i dati della carta. Numero, data di scadenza e codice di sicurezza si inseriscono esclusivamente sulla pagina della banca. Del pagamento conserviamo soltanto i codici di riferimento della transazione e il tipo di carta."
+        ]
+      },
+      {
+        "title": "Perché li trattiamo",
+        "body": [
+          "Per eseguire la tua prenotazione e contattarti al riguardo. La base giuridica è l'esecuzione di un contratto, articolo 6, paragrafo 1, lettera b) del Regolamento.",
+          "Per mantenere sicure le transazioni e gestire i casi di frode, sulla base del nostro legittimo interesse.",
+          "Per adempiere agli obblighi fiscali e contabili, dove la legge lo richiede.",
+          "Non ti inviamo messaggi pubblicitari e non vendiamo i tuoi dati a nessuno."
+        ]
+      },
+      {
+        "title": "Chi altro li vede",
+        "body": [
+          "Euronet Merchant Services, per eseguire il pagamento con carta.",
+          "I fornitori che ospitano il sito, il database e il servizio email, che agiscono unicamente per nostro conto sulla base di un contratto di trattamento dei dati.",
+          "Le nostre infrastrutture si trovano all'interno dell'Unione europea."
+        ]
+      },
+      {
+        "title": "Per quanto tempo li conserviamo",
+        "body": [
+          "I dati della prenotazione sono conservati per il tempo necessario a eseguirla e a documentare la transazione in caso di contestazione. I dati legati agli obblighi fiscali sono conservati per il periodo previsto dalla legge."
+        ]
+      },
+      {
+        "title": "Cookie",
+        "body": [
+          "Usiamo solo i cookie strettamente necessari al funzionamento della prenotazione: uno per la lingua che hai scelto e uno temporaneo che porta il codice della prenotazione alla pagina di pagamento.",
+          "Non usiamo cookie di tracciamento, statistici o pubblicitari."
+        ]
+      },
+      {
+        "title": "I tuoi diritti",
+        "body": [
+          "Hai il diritto di accedere ai tuoi dati e di ottenerne la rettifica, la cancellazione, la limitazione e la portabilità, oltre al diritto di opporti al trattamento. Scrivi all'indirizzo di contatto indicato sopra.",
+          "Se ritieni che i tuoi dati siano trattati illecitamente, puoi presentare reclamo all'Autorità greca per la protezione dei dati personali, www.dpa.gr."
+        ]
+      }
+    ]
+  }
+}

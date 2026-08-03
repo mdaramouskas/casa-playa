@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useTranslations } from "next-intl";
 import dayjs from "dayjs";
+import { localeTags, type Locale } from "@/i18n/routing";
 import type { DisplayProduct } from "@/lib/catalog";
 import type { Availability } from "@/lib/availability";
 import { business } from "@/lib/business";
@@ -31,7 +32,7 @@ export function BookingForm({
   locale,
 }: {
   product: DisplayProduct;
-  locale: string;
+  locale: Locale;
 }) {
   const t = useTranslations("booking");
   const c = useTranslations("catalog");
@@ -54,10 +55,21 @@ export function BookingForm({
   const [error, setError] = useState<string | null>(null);
 
   const maxMonth = firstBookable.add(MONTHS_AHEAD, "month").startOf("month");
-  const weekdays =
-    locale === "en"
-      ? ["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"]
-      : ["Κυ", "Δε", "Τρ", "Τε", "Πε", "Πα", "Σα"];
+
+  // Asked of `Intl` rather than written out seven times: the calendar has to
+  // read in every language the site offers, and the platform already knows the
+  // abbreviations. Trimmed to two letters because these are grid headings —
+  // "short" gives "Δευ" and "dim.", and the columns are narrow.
+  const weekdays = useMemo(() => {
+    const format = new Intl.DateTimeFormat(localeTags[locale], {
+      weekday: "short",
+      timeZone: "UTC",
+    });
+    // 1 Jan 2023 was a Sunday, and the grid is Sunday-first.
+    return Array.from({ length: 7 }, (_, day) =>
+      format.format(new Date(Date.UTC(2023, 0, 1 + day))).slice(0, 2),
+    );
+  }, [locale]);
 
   // Variants share one slot grid — for the restaurant the tables are the same
   // tables whichever menu you pick.
@@ -194,7 +206,7 @@ export function BookingForm({
             <span className="font-medium">
               {month
                 .toDate()
-                .toLocaleDateString(locale === "en" ? "en-GB" : "el-GR", {
+                .toLocaleDateString(localeTags[locale], {
                   month: "long",
                   year: "numeric",
                 })}
@@ -327,19 +339,20 @@ export function BookingForm({
                 />
               </label>
             ) : (
-              <label key={variant.name} className="block">
-                <span className="mb-1 block text-sm font-medium">
-                  {t("persons")}
-                </span>
-                <input
-                  type="number"
-                  min={1}
-                  max={maxPersons}
-                  value={personsByVariant[variant.name] ?? 1}
-                  onChange={(e) => setPersons(variant.name, Number(e.target.value))}
-                  className="w-28 rounded-lg border border-neutral-300 px-3 py-2"
-                />
-              </label>
+              // One variant, so there is nothing to tell apart and the section
+              // heading above is already the label — printing "Persons" twice,
+              // one under the other, just read as a stutter. The name stays on
+              // the field for anyone using a screen reader.
+              <input
+                key={variant.name}
+                type="number"
+                aria-label={t("persons")}
+                min={1}
+                max={maxPersons}
+                value={personsByVariant[variant.name] ?? 1}
+                onChange={(e) => setPersons(variant.name, Number(e.target.value))}
+                className="w-28 rounded-lg border border-neutral-300 px-3 py-2"
+              />
             ),
           )}
         </div>

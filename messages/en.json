@@ -1,4 +1,8 @@
 {
+  "meta": {
+    "title": "Casa Playa — Bookings",
+    "description": "Book sunbeds, cabanas and restaurant tables online at Casa Playa, Zakynthos."
+  },
   "common": {
     "brand": "Casa Playa",
     "book": "Book",

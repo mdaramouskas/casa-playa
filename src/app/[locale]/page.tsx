@@ -1,11 +1,23 @@
+import type { Metadata } from "next";
 import Image from "next/image";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
-import { SiteBackground } from "@/components/site-background";
+import { localeMetadata } from "@/i18n/alternates";
+import { PANEL } from "@/components/panel";
 import { listProducts, fromPriceCents } from "@/lib/catalog";
 import { formatPrice } from "@/lib/money";
 
 export const dynamic = "force-dynamic";
+
+// Title and description come from the layout; this adds only the hreflang set.
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ locale: string }>;
+}): Promise<Metadata> {
+  const { locale } = await params;
+  return localeMetadata("/", locale);
+}
 
 export default async function HomePage({
   params,
@@ -21,13 +33,10 @@ export default async function HomePage({
 
   return (
     <main className="flex-1">
-      {/* Fixed behind everything on this page — the content scrolls over it. */}
-      <SiteBackground />
-
       {/* No hero copy: the footage says where you are, and the list below says
           what there is to book. The space is what lets the video be seen. */}
       <section className="mx-auto max-w-5xl px-6 pb-24 pt-16 sm:pt-28">
-        <ul className="divide-y divide-neutral-200 rounded-2xl border border-neutral-200 bg-white shadow-sm">
+        <ul className={`${PANEL} divide-y divide-neutral-300/60`}>
           {products.map((product) => (
             <li
               key={product.slug}

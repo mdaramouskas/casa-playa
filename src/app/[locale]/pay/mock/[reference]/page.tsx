@@ -2,7 +2,7 @@ import { notFound, redirect } from "next/navigation";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { EpayPage } from "@/components/epay-page";
 import { prisma } from "@/lib/prisma";
-import { getPaycenterConfig } from "@/lib/paycenter/config";
+import { getPaycenterConfig, languageCode } from "@/lib/paycenter/config";
 import { localePrefix } from "@/lib/paycenter/gateway";
 import { computeHashKey } from "@/lib/paycenter/hashkey";
 import {
@@ -69,7 +69,7 @@ export default async function MockPaymentPage({
       StatusFlag: approved ? "Success" : "Failure",
       ResponseCode: approved ? "00" : "05",
       ResponseDescription: approved ? "Approved" : "Do not honor",
-      LanguageCode: locale === "en" ? "en-US" : "el-GR",
+      LanguageCode: languageCode(locale),
       MerchantReference: reference,
       TransactionId: `MOCK${supportReferenceId}`,
       ApprovalCode: approved ? "123456" : "",

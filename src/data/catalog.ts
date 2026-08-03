@@ -277,9 +277,18 @@ export function findProduct(slug: string): CatalogProduct | undefined {
   return catalog.find((p) => p.slug === slug);
 }
 
-/** Pick the English or Greek copy of a product for the given locale. */
+/**
+ * Pick the English or Greek copy of a product for the given locale.
+ *
+ * The catalog is only written in two languages — the product names and the
+ * "what's included" lists live in `titleEn`/`includesEn` columns, and staff
+ * would have to write and maintain five more. So everyone who is not reading
+ * Greek gets the English copy. That is the right fallback rather than a
+ * shortcut: a French visitor can read "Sunbed Set A · 2 sunbeds, umbrella,
+ * towels", and could not read the Greek.
+ */
 export function localizeProduct(product: CatalogProduct, locale: string) {
-  const en = locale === "en";
+  const en = locale !== "el";
   return {
     ...product,
     title: en ? product.titleEn : product.title,

@@ -1,0 +1,263 @@
+{
+  "meta": {
+    "title": "Casa Playa — Buchungen",
+    "description": "Buchen Sie Liegen, Cabanas und Restauranttische online im Casa Playa, Zakynthos."
+  },
+  "common": {
+    "brand": "Casa Playa",
+    "book": "Buchen",
+    "loading": "Wird geladen…",
+    "vatIncluded": "inkl. 24 % MwSt.",
+    "perSet": "pro Set",
+    "perPerson": "Person",
+    "persons": "{count, plural, one {Person} other {Personen}}",
+    "total": "Gesamt"
+  },
+  "nav": {
+    "home": "Startseite",
+    "loungers": "Liegen",
+    "cabanas": "Cabanas",
+    "restaurant": "Restaurant",
+    "myBooking": "Meine Buchung"
+  },
+  "home": {
+    "heroTitle": "Casa Playa",
+    "heroSubtitle": "Beachbar & Restaurant, Zakynthos",
+    "heroLead": "Buchen Sie Liegen, Cabanas und einen Tisch im Restaurant online — sofort und sicher.",
+    "chooseType": "Wählen Sie, was Sie buchen möchten"
+  },
+  "catalog": {
+    "includedInPrice": "Im Preis enthalten:",
+    "vatNote": "Alle Preise verstehen sich inklusive 24 % MwSt. und örtlicher Abgaben.",
+    "more": "Mehr",
+    "from": "Ab:",
+    "availableTimes": "Verfügbare Zeiten",
+    "noPrepayment": "Keine Vorauszahlung",
+    "bookingSoon": "Die Onlinebuchung startet in Kürze."
+  },
+  "booking": {
+    "selectDate": "Datum wählen",
+    "quantity": "Anzahl",
+    "persons": "Personen",
+    "timeSlot": "Uhrzeit",
+    "couponCode": "Rabattcode",
+    "couponOptional": "optional",
+    "firstName": "Vorname",
+    "lastName": "Nachname",
+    "email": "E-Mail",
+    "phone": "Telefon",
+    "comments": "Anmerkungen",
+    "acceptCancellation": "Ich akzeptiere die Stornierungsbedingungen",
+    "proceedToPayment": "Weiter zur Zahlung",
+    "reference": "Buchungsnummer",
+    "selectDateAndTimeFirst": "Wählen Sie zuerst Datum, Uhrzeit und Personenzahl.",
+    "confirmBooking": "Buchung abschließen",
+    "sets": "Set(s)",
+    "extraLounger": "zusätzliche Liege",
+    "setsLeft": "Noch {count} Set(s) für diesen Tag.",
+    "left": "{count} verfügbar",
+    "soldOut": "Ausgebucht",
+    "tableHeldFor": "Jede Buchung hält den Tisch {hours} Stunden lang frei.",
+    "errors": {
+      "generic": "Etwas ist schiefgelaufen. Bitte versuchen Sie es erneut.",
+      "soldOut": "Für die gewählte Uhrzeit ist nichts mehr frei.",
+      "invalidDate": "Ungültiges Datum.",
+      "invalidCoupon": "Dieser Rabattcode ist nicht gültig.",
+      "tooManyPersons": "Bis zu {max} Personen pro Buchung. Für größere Gruppen kontaktieren Sie uns bitte."
+    }
+  },
+  "mockPay": {
+    "banner": "TESTSEITE — eine Nachbildung der Zahlungsseite von Euronet. Es werden keine Kartendaten entgegengenommen und es wird nichts abgebucht.",
+    "mode": "Paycenter mode: {mode} · {type} · {reference}",
+    "simulateDecline": "Ablehnung simulieren",
+    "footnote": "Sobald Euronet AcquirerId/MerchantId/PosId/Username/Password bereitstellt, ersetzt Paycenter pay.aspx diese Seite — der übrige Ablauf (Ticketing, HashKey-Prüfung) bleibt gleich."
+  },
+  "epayPage": {
+    "cardPayment": "Kartenzahlung",
+    "irisPayment": "IRIS-Zahlung",
+    "googlePayPayment": "Zahlung mit Google Pay",
+    "merchant": "Händler",
+    "transactionAmount": "Transaktionsbetrag",
+    "choosePaymentMethod": "Zahlungsart wählen",
+    "methodCard": "Karte",
+    "methodIris": "IRIS",
+    "methodGooglePay": "Google Pay",
+    "cardNumber": "Kartennummer",
+    "expiryAndCvv": "Ablaufdatum und CVV",
+    "expiryPlaceholder": "MM / JJJJ",
+    "cvv": "CVV",
+    "cardholderName": "Name des Karteninhabers",
+    "cardholderNameHint": "(wie auf Ihrer Karte angegeben)",
+    "email": "E-Mail",
+    "requiredFields": "* Pflichtfelder",
+    "disclaimer": "Die Angabe Ihres Namens und Ihrer E-Mail-Adresse erhöht die Sicherheit der Transaktionen gemäß den Richtlinien der Kartenorganisationen (z. B. Visa, Mastercard). Diese Angaben werden an die Bank übermittelt, die Ihre Karte ausgestellt hat. Weitere Einzelheiten finden Sie in der <privacy>Datenschutzerklärung</privacy> von epay.",
+    "cancel": "Abbrechen",
+    "pay": "{amount} zahlen",
+    "continue": "Weiter",
+    "bankOption": "Mit Ihrer Bank verbinden",
+    "bankOptionHint": "Zahlung per E-Banking",
+    "qrOption": "QR-Code scannen",
+    "qrOptionHint": "über Ihre Banking-App",
+    "bankSelectLead": "Wählen Sie Ihre Bank aus; Sie werden automatisch in die sichere E-Banking-Umgebung Ihrer Bank weitergeleitet, um die Zahlung abzuschließen. Nach Abschluss der Zahlung werden Sie automatisch auf die Website des Händlers zurückgeleitet.",
+    "qrTitle": "IRIS-Zahlung per QR-Code",
+    "qrLead": "Öffnen Sie die Mobile-Banking-App Ihrer Bank, scannen Sie den QR-Code unten und schließen Sie die Zahlung ab. Nach Abschluss der Zahlung werden Sie automatisch auf die Website des Händlers zurückgeleitet.",
+    "qrPlaceholder": "Der QR-Code wird zum Zahlungszeitpunkt von IRIS erzeugt.",
+    "googlePayButton": "Zahlen mit"
+  },
+  "payments": {
+    "acceptedCards": "Akzeptierte Karten",
+    "poweredBy": "Sichere Zahlungen über",
+    "statementDescriptor": "Auf Ihrer Kartenabrechnung erscheint diese Buchung als {name}."
+  },
+  "security": {
+    "title": "Zahlungssicherheit",
+    "lead": "Die Onlinezahlungen von Casa Playa laufen über den Dienst epay eCommerce (Redirection) von Euronet Merchant Services.",
+    "cardsTitle": "Akzeptierte Karten",
+    "threeDsTitle": "Starke Kundenauthentifizierung",
+    "threeDsBody": "Jede Transaktion ist durch Visa Secure und Mastercard Identity Check geschützt. Die Bank, die Ihre Karte ausgestellt hat, kann vor Abschluss der Zahlung eine zusätzliche Bestätigung von Ihnen verlangen.",
+    "dataTitle": "Ihre Kartendaten",
+    "dataBody": "Kartendaten werden ausschließlich auf der Zahlungsseite von Euronet Merchant Services über eine verschlüsselte Verbindung eingegeben. Sie gelangen nie auf unsere Server, werden nicht gespeichert und sind für uns nicht einsehbar.",
+    "confirmTitle": "Zahlungsbestätigung",
+    "confirmBody": "Die Antwort der Bank wird kryptografisch geprüft (HashKey), bevor eine Buchung als bezahlt gilt — fälschen lässt sie sich damit nicht."
+  },
+  "payHandoff": {
+    "title": "Weiterleitung zur sicheren Zahlung",
+    "body": "Wir leiten Sie zur Zahlungsseite der Bank weiter. Bitte schließen Sie dieses Fenster nicht.",
+    "continue": "Weiter zur Zahlung"
+  },
+  "policy": {
+    "cancellationTitle": "Stornierungsbedingungen",
+    "nonRefundable": "Nicht erstattungsfähige Buchung. Bei Stornierung, Nichterscheinen oder verspäteter Ankunft (nach 12:00 Uhr) werden 100 % berechnet."
+  },
+  "payment": {
+    "successTitle": "Zahlung abgeschlossen",
+    "successBody": "Ihre Buchung ist bestätigt. Buchungsnummer:",
+    "failureTitle": "Zahlung nicht abgeschlossen",
+    "failureBody": "Bei der Zahlung ist etwas schiefgelaufen. Bitte versuchen Sie es erneut."
+  },
+  "footer": {
+    "vatNumber": "USt-IdNr.",
+    "terms": "Buchungsbedingungen",
+    "privacy": "Datenschutzerklärung",
+    "security": "Zahlungssicherheit",
+    "rights": "© Banana Casa Playa Zakynthos {year}. Alle Rechte vorbehalten."
+  },
+  "legal": {
+    "draftNotice": "Entwurf, der noch vom Unternehmen freigegeben werden muss. Der Text beschreibt die Funktionsweise des Buchungssystems zutreffend, ist aber noch nicht freigegeben und nicht juristisch geprüft."
+  },
+  "terms": {
+    "title": "Buchungsbedingungen",
+    "lead": "Die Bedingungen, die für jede über diese Website vorgenommene Buchung gelten. Mit dem Abschluss einer Buchung bestätigen Sie, dass Sie sie gelesen und akzeptiert haben.",
+    "sections": [
+      {
+        "title": "Mit wem Sie den Vertrag schließen",
+        "body": [
+          "Ihre Buchung kommt mit CASA PLAYA ΟΕ zustande, Umsatzsteuer-Nummer 801773715, mit Sitz in Vasilikos, Zakynthos, 29100, Griechenland.",
+          "Das Unternehmen tritt unter dem Namen BANANA BEACH CASA PLAYA auf. Unter diesem Namen erscheint auch die Belastung auf Ihrer Kartenabrechnung."
+        ]
+      },
+      {
+        "title": "Was Sie buchen",
+        "body": [
+          "Liegen und Cabanas: Die Buchung gilt für den ganzen Tag. Die von Ihnen gewählte Uhrzeit ist nur Ihre Ankunftszeit.",
+          "Ein Set ist für zwei Personen. Bei Liegen wird eine dritte Person mit einer zusätzlichen Liege zum halben Set-Preis untergebracht. Cabanas nehmen keine dritte Person auf.",
+          "Restauranttische: Die von Ihnen gewählte Uhrzeit ist die tatsächliche Reservierungszeit, und Ihr Tisch wird zweieinhalb Stunden lang freigehalten.",
+          "Buchungen für denselben Tag sind nicht möglich. Das früheste verfügbare Datum ist morgen."
+        ]
+      },
+      {
+        "title": "Preise und Zahlung",
+        "body": [
+          "Alle Preise verstehen sich in Euro und inklusive 24 % MwSt. Der vor der Zahlung angezeigte Betrag ist der endgültig belastete Betrag.",
+          "Die Zahlung erfolgt per Karte über den Dienst epay eCommerce von Euronet Merchant Services. Ihre Kartendaten werden ausschließlich auf der Seite der Bank eingegeben; sie gelangen nie auf unsere Server und werden von uns nicht gespeichert.",
+          "Eine Buchung wird erst dann verbindlich, wenn wir von der Bank die Zahlungsbestätigung erhalten. Bis dahin bleibt sie offen und reserviert keinen Platz."
+        ]
+      },
+      {
+        "title": "Stornierung und Nichterscheinen",
+        "body": [
+          "Buchungen sind nicht erstattungsfähig. Bei Stornierung, Nichterscheinen oder Ankunft nach 12:00 Uhr wird der volle Betrag berechnet.",
+          "Wenn sich Ihre Pläne ändern, lesen Sie den nächsten Abschnitt: Das Datum zu verschieben ist in der Regel besser als zu stornieren."
+        ]
+      },
+      {
+        "title": "Datum ändern",
+        "body": [
+          "Sie können bis zu zwei Tage vor dem Buchungsdatum eine Datumsänderung beantragen. Das neue Datum darf höchstens zwei Tage nach dem ursprünglichen liegen.",
+          "Der Preis bleibt auf den ursprünglichen Betrag festgeschrieben: Es gibt weder eine Nachzahlung noch eine Erstattung, auch wenn der Preis für den neuen Tag abweicht.",
+          "Anfragen erfolgen telefonisch oder per E-Mail unter Angabe Ihrer Buchungsnummer. Eine Änderung hängt von der Verfügbarkeit am neuen Datum ab."
+        ]
+      },
+      {
+        "title": "Belege",
+        "body": [
+          "Die Bestätigungs-E-Mail, die Sie erhalten, ist der Nachweis Ihrer Buchung, aber kein Steuerbeleg. Der Beleg oder die Rechnung wird vom Unternehmen vor Ort ausgestellt. Wenn Sie eine Rechnung benötigen, sagen Sie uns bitte bei Ihrer Ankunft Bescheid."
+        ]
+      },
+      {
+        "title": "Kontakt, Beschwerden und anwendbares Recht",
+        "body": [
+          "Für alles, was Ihre Buchung betrifft, erreichen Sie uns unter bananacasaplaya@gmail.com oder +30 26950 35160 — bitte geben Sie Ihre Buchungsnummer an.",
+          "Diese Bedingungen unterliegen griechischem Recht. Als Verbraucher behalten Sie sämtliche Rechte, die Ihnen das Gesetz einräumt, einschließlich der außergerichtlichen Streitbeilegung über die europäische OS-Plattform."
+        ]
+      }
+    ]
+  },
+  "privacy": {
+    "title": "Datenschutzerklärung",
+    "lead": "Wie wir die personenbezogenen Daten verwenden, die Sie uns bei einer Buchung geben — nach der Datenschutz-Grundverordnung.",
+    "sections": [
+      {
+        "title": "Verantwortlicher",
+        "body": [
+          "CASA PLAYA ΟΕ, Umsatzsteuer-Nummer 801773715, Vasilikos, 29100 Zakynthos, Griechenland. In Datenschutzfragen: bananacasaplaya@gmail.com, +30 26950 35160."
+        ]
+      },
+      {
+        "title": "Was wir erheben",
+        "body": [
+          "Was Sie im Buchungsformular eingeben: Vorname, Nachname, E-Mail, Telefon und etwaige Anmerkungen.",
+          "Die Buchung selbst: Produkt, Datum, Uhrzeit, Personenzahl, Betrag und Zahlungsstatus.",
+          "Kartendaten erheben und sehen wir nie. Nummer, Ablaufdatum und Sicherheitscode werden ausschließlich auf der Seite der Bank eingegeben. Von der Zahlung behalten wir nur die Referenznummern der Transaktion und den Kartentyp."
+        ]
+      },
+      {
+        "title": "Warum wir sie verarbeiten",
+        "body": [
+          "Um Ihre Buchung auszuführen und Sie dazu zu kontaktieren. Rechtsgrundlage ist die Erfüllung eines Vertrags, Artikel 6 Absatz 1 Buchstabe b der Verordnung.",
+          "Um Transaktionen sicher zu halten und Betrugsfälle zu bearbeiten, auf Grundlage unseres berechtigten Interesses.",
+          "Um steuerliche und buchhalterische Pflichten zu erfüllen, soweit das Gesetz dies verlangt.",
+          "Wir senden Ihnen keine Werbenachrichten und verkaufen Ihre Daten an niemanden."
+        ]
+      },
+      {
+        "title": "Wer sie sonst noch sieht",
+        "body": [
+          "Euronet Merchant Services, um die Kartenzahlung abzuwickeln.",
+          "Die Anbieter, die die Website, die Datenbank und den E-Mail-Dienst hosten — ausschließlich in unserem Auftrag und auf Grundlage eines Auftragsverarbeitungsvertrags.",
+          "Unsere Infrastruktur befindet sich innerhalb der Europäischen Union."
+        ]
+      },
+      {
+        "title": "Wie lange wir sie aufbewahren",
+        "body": [
+          "Buchungsdaten werden so lange aufbewahrt, wie es für die Durchführung der Buchung und den Nachweis der Transaktion im Streitfall erforderlich ist. Daten, die an steuerliche Pflichten gebunden sind, werden für den gesetzlich vorgeschriebenen Zeitraum aufbewahrt."
+        ]
+      },
+      {
+        "title": "Cookies",
+        "body": [
+          "Wir verwenden nur die für die Buchung unbedingt erforderlichen Cookies: eines für die von Ihnen gewählte Sprache und ein temporäres, das Ihre Buchungsnummer zur Zahlungsseite überträgt.",
+          "Wir verwenden keine Tracking-, Analyse- oder Werbe-Cookies."
+        ]
+      },
+      {
+        "title": "Ihre Rechte",
+        "body": [
+          "Sie haben das Recht auf Auskunft über Ihre Daten sowie auf deren Berichtigung, Löschung, Einschränkung und Übertragung und das Recht, der Verarbeitung zu widersprechen. Wenden Sie sich an die oben genannte Kontaktadresse.",
+          "Wenn Sie der Ansicht sind, dass Ihre Daten unrechtmäßig verarbeitet werden, können Sie sich bei der griechischen Datenschutzbehörde beschweren, www.dpa.gr."
+        ]
+      }
+    ]
+  }
+}

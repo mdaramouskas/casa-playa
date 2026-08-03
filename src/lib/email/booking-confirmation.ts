@@ -1,3 +1,4 @@
+import { localeTags, type Locale } from "@/i18n/routing";
 import { prisma } from "@/lib/prisma";
 import { addressLine, business } from "@/lib/business";
 import { formatPrice } from "@/lib/money";
@@ -37,7 +38,11 @@ type Copy = {
   notAnInvoice: string;
 };
 
-const COPY: Record<"el" | "en", Copy> = {
+// One entry per site language. The email is the only thing the customer can
+// show on arrival, and the one message they get after paying — sending it in a
+// language they did not choose is where a booking flow stops feeling
+// translated, so the copy is carried in all seven rather than falling back.
+const COPY: Record<Locale, Copy> = {
   el: {
     subject: (reference) => `Επιβεβαίωση κράτησης ${reference} — Casa Playa`,
     greeting: (name) => `Γεια σας ${name},`,
@@ -88,6 +93,141 @@ const COPY: Record<"el" | "en", Copy> = {
     notAnInvoice:
       "This is a booking confirmation, not a tax document. The receipt is issued on site.",
   },
+  de: {
+    subject: (reference) => `Buchungsbestätigung ${reference} — Casa Playa`,
+    greeting: (name) => `Hallo ${name},`,
+    confirmed: "Ihre Buchung ist bestätigt und Ihre Zahlung ist eingegangen.",
+    reference: "Buchungsnummer",
+    what: "Buchung",
+    date: "Datum",
+    arrivalTime: "Ankunftszeit",
+    reservationTime: "Reservierungszeit",
+    allDayNote:
+      "Die Buchung gilt für den ganzen Tag — die Uhrzeit ist nur Ihre geplante Ankunft.",
+    persons: "Personen",
+    total: "Gesamt",
+    vatIncluded: "inkl. 24 % MwSt.",
+    noPrepayment: "Keine Vorauszahlung",
+    policyTitle: "Stornierung und Datumsänderung",
+    policyBody:
+      "Diese Buchung ist nicht erstattungsfähig. Bei Stornierung, Nichterscheinen oder Ankunft nach 12:00 Uhr wird der volle Betrag berechnet.",
+    rescheduleBody: (cutoff, window) =>
+      `Sie können bis zu ${cutoff} Tage vorher eine Datumsänderung beantragen, auf ein neues Datum höchstens ${window} Tage nach dem ursprünglichen. Der Preis bleibt gleich.`,
+    statement: (name) =>
+      `Auf Ihrer Kartenabrechnung erscheint diese Buchung als ${name}.`,
+    questions:
+      "Wenn etwas unklar ist, antworten Sie einfach auf diese E-Mail oder rufen Sie uns an.",
+    notAnInvoice:
+      "Dies ist eine Buchungsbestätigung, kein Steuerbeleg. Der Beleg wird vor Ort ausgestellt.",
+  },
+  ru: {
+    subject: (reference) => `Подтверждение брони ${reference} — Casa Playa`,
+    greeting: (name) => `Здравствуйте, ${name}!`,
+    confirmed: "Ваша бронь подтверждена, платёж прошёл.",
+    reference: "Номер брони",
+    what: "Бронь",
+    date: "Дата",
+    arrivalTime: "Время прибытия",
+    reservationTime: "Время брони",
+    allDayNote:
+      "Бронь действует на весь день — указанное время это лишь время вашего прибытия.",
+    persons: "Гостей",
+    total: "Итого",
+    vatIncluded: "включая НДС 24 %",
+    noPrepayment: "Без предоплаты",
+    policyTitle: "Отмена и перенос даты",
+    policyBody:
+      "Эта бронь не подлежит возврату. При отмене, неявке или прибытии после 12:00 удерживается полная сумма.",
+    rescheduleBody: (cutoff, window) =>
+      `Вы можете попросить перенести дату не позднее чем за ${cutoff} дн. до неё, на новую дату не более чем через ${window} дн. после первоначальной. Цена остаётся прежней.`,
+    statement: (name) =>
+      `В выписке по карте это списание отображается как ${name}.`,
+    questions:
+      "Если что-то неясно, ответьте на это письмо или позвоните нам.",
+    notAnInvoice:
+      "Это подтверждение брони, а не налоговый документ. Чек выдаётся на месте.",
+  },
+  it: {
+    subject: (reference) => `Conferma di prenotazione ${reference} — Casa Playa`,
+    greeting: (name) => `Ciao ${name},`,
+    confirmed: "La tua prenotazione è confermata e il pagamento è andato a buon fine.",
+    reference: "Codice prenotazione",
+    what: "Prenotazione",
+    date: "Data",
+    arrivalTime: "Orario di arrivo",
+    reservationTime: "Orario della prenotazione",
+    allDayNote:
+      "La prenotazione vale per l'intera giornata — l'orario indica solo quando pensi di arrivare.",
+    persons: "Persone",
+    total: "Totale",
+    vatIncluded: "IVA 24% inclusa",
+    noPrepayment: "Senza prepagamento",
+    policyTitle: "Cancellazione e cambio data",
+    policyBody:
+      "Questa prenotazione non è rimborsabile. Cancellazione, mancata presentazione o arrivo dopo le 12:00 comportano l'addebito dell'intero importo.",
+    rescheduleBody: (cutoff, window) =>
+      `Puoi chiedere di spostare la data fino a ${cutoff} giorni prima, a una nuova data al massimo ${window} giorni dopo quella originaria. Il prezzo resta lo stesso.`,
+    statement: (name) =>
+      `Sull'estratto conto della carta l'addebito appare come ${name}.`,
+    questions:
+      "Se qualcosa non è chiaro, rispondi a questa email o chiamaci.",
+    notAnInvoice:
+      "Questa è una conferma di prenotazione, non un documento fiscale. La ricevuta viene emessa sul posto.",
+  },
+  fr: {
+    subject: (reference) => `Confirmation de réservation ${reference} — Casa Playa`,
+    greeting: (name) => `Bonjour ${name},`,
+    confirmed: "Votre réservation est confirmée et votre paiement a été accepté.",
+    reference: "Numéro de réservation",
+    what: "Réservation",
+    date: "Date",
+    arrivalTime: "Heure d'arrivée",
+    reservationTime: "Heure de la réservation",
+    allDayNote:
+      "La réservation couvre la journée entière — l'heure indique seulement quand vous comptez arriver.",
+    persons: "Personnes",
+    total: "Total",
+    vatIncluded: "TVA 24 % incluse",
+    noPrepayment: "Sans prépaiement",
+    policyTitle: "Annulation et changement de date",
+    policyBody:
+      "Cette réservation n'est pas remboursable. En cas d'annulation, d'absence ou d'arrivée après 12h00, la totalité du montant est facturée.",
+    rescheduleBody: (cutoff, window) =>
+      `Vous pouvez demander à décaler la date jusqu'à ${cutoff} jours à l'avance, vers une nouvelle date au plus ${window} jours après la date initiale. Le prix reste inchangé.`,
+    statement: (name) =>
+      `Sur votre relevé de carte, ce débit apparaît sous le nom ${name}.`,
+    questions:
+      "Si quelque chose n'est pas clair, répondez à cet e-mail ou appelez-nous.",
+    notAnInvoice:
+      "Ceci est une confirmation de réservation, pas un document fiscal. Le reçu est délivré sur place.",
+  },
+  es: {
+    subject: (reference) => `Confirmación de reserva ${reference} — Casa Playa`,
+    greeting: (name) => `Hola ${name}:`,
+    confirmed: "Tu reserva está confirmada y el pago se ha realizado.",
+    reference: "Código de reserva",
+    what: "Reserva",
+    date: "Fecha",
+    arrivalTime: "Hora de llegada",
+    reservationTime: "Hora de la reserva",
+    allDayNote:
+      "La reserva cubre el día completo — la hora indica solo cuándo piensas llegar.",
+    persons: "Personas",
+    total: "Total",
+    vatIncluded: "IVA 24 % incluido",
+    noPrepayment: "Sin pago por adelantado",
+    policyTitle: "Cancelación y cambio de fecha",
+    policyBody:
+      "Esta reserva no es reembolsable. La cancelación, la no presentación o la llegada después de las 12:00 se cobran íntegramente.",
+    rescheduleBody: (cutoff, window) =>
+      `Puedes pedir cambiar la fecha hasta ${cutoff} días antes, a una nueva fecha como máximo ${window} días posterior a la original. El precio no varía.`,
+    statement: (name) =>
+      `En el extracto de tu tarjeta este cargo aparece como ${name}.`,
+    questions:
+      "Si algo no queda claro, responde a este correo o llámanos.",
+    notAnInvoice:
+      "Esto es una confirmación de reserva, no un documento fiscal. El recibo se emite en el local.",
+  },
 };
 
 function escapeHtml(value: string): string {
@@ -98,8 +238,8 @@ function escapeHtml(value: string): string {
     .replace(/"/g, "&quot;");
 }
 
-function formatDate(date: Date, locale: "el" | "en"): string {
-  return new Intl.DateTimeFormat(locale === "en" ? "en-GB" : "el-GR", {
+function formatDate(date: Date, locale: Locale): string {
+  return new Intl.DateTimeFormat(localeTags[locale], {
     weekday: "long",
     day: "numeric",
     month: "long",
@@ -210,10 +350,12 @@ export interface ConfirmableBooking {
  */
 export function buildBookingConfirmation(
   booking: ConfirmableBooking,
-  locale: "el" | "en",
+  locale: Locale,
 ) {
   const copy = COPY[locale];
-  const english = locale === "en";
+  // The product name has only the two catalog columns behind it, so everyone
+  // outside Greek reads the English one — same fallback as the site's catalog.
+  const english = locale !== "el";
   const productName =
     (english ? booking.product.nameEn : booking.product.name) ??
     booking.product.name;
@@ -264,7 +406,7 @@ export function buildBookingConfirmation(
  */
 export async function sendBookingConfirmation(
   bookingId: string,
-  locale: "el" | "en",
+  locale: Locale,
 ): Promise<boolean> {
   const booking = await prisma.booking.findUnique({
     where: { id: bookingId },
