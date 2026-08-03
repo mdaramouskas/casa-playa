@@ -31,12 +31,27 @@ const MAX_AGE_SECONDS = 12 * 60 * 60;
  */
 const COOKIE_PATH = "/admin";
 
+/**
+ * HS256 is only as strong as this string. A short one is brute-forceable
+ * offline from a single captured cookie, and forging a session then costs
+ * nothing — so a weak secret fails loudly rather than quietly protecting
+ * nothing. 32 characters is the floor; `openssl rand -hex 32` gives 64.
+ */
+const MIN_SECRET_LENGTH = 32;
+
 function key(): Uint8Array {
   const secret = process.env.AUTH_SECRET;
   if (!secret || secret === "change-me-in-production") {
     throw new Error(
       "AUTH_SECRET is missing or still the placeholder. Generate one with " +
         "`openssl rand -hex 32` — staff sessions are signed with it.",
+    );
+  }
+  if (secret.length < MIN_SECRET_LENGTH) {
+    throw new Error(
+      `AUTH_SECRET is ${secret.length} characters; at least ` +
+        `${MIN_SECRET_LENGTH} are required. Generate one with ` +
+        "`openssl rand -hex 32`.",
     );
   }
   return new TextEncoder().encode(secret);
