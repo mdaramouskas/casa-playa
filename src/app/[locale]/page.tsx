@@ -35,12 +35,18 @@ export default async function HomePage({
     <main className="flex-1">
       {/* No hero copy: the footage says where you are, and the list below says
           what there is to book. The space is what lets the video be seen. */}
+      {/* One card per product rather than one slab with hairlines through it.
+          As a single panel the list ran from the top of the page to the footer
+          edge to edge, so below the first screen the only video left to see was
+          the 24px gutters — the footage was playing behind an unbroken sheet of
+          white. Separate cards put a full-width band of it between every
+          product, the whole way down. */}
       <section className="mx-auto max-w-5xl px-6 pb-24 pt-16 sm:pt-28">
-        <ul className={`${PANEL} divide-y divide-neutral-300/60`}>
+        <ul className="space-y-5">
           {products.map((product) => (
             <li
               key={product.slug}
-              className="flex flex-col gap-5 p-6 sm:flex-row sm:items-start"
+              className={`${PANEL} flex flex-col gap-5 p-6 sm:flex-row sm:items-start`}
             >
               {product.imageUrl ? (
                 <Image
